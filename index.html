@@ -273,63 +273,30 @@ label{
   .info-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media print{
-  @page{
-    size: A4 portrait;
-    margin: 10mm 8mm 10mm 8mm;
-  }
+  @page{size:A4 landscape;margin:8mm 8mm 8mm 8mm}
+  html,body{width:100%;height:100%;overflow:hidden}
   .top-bar,.nav-btn,button,.page:not(#page-manifest){display:none!important}
-  #page-manifest{display:block!important;padding:0;margin:0;width:100%}
-  body{background:#fff!important;color:#000!important;margin:0;padding:0}
-
-  /* Force everything inside page width */
-  *{max-width:100%;box-sizing:border-box!important;box-shadow:none!important}
-
-  /* Manifest header */
-  #page-manifest>div:first-child{margin-bottom:6px}
-
-  /* Main grid — two columns that fit the page */
-  .manifest-grid{
-    display:grid!important;
-    grid-template-columns:55% 43%!important;
-    gap:2%!important;
-    width:100%!important;
-  }
-
-  /* Tables */
-  .manifest-table{width:100%!important;font-size:9px!important}
-  .manifest-table th,.manifest-table td{
-    border:0.5px solid #bbb!important;
-    color:#000!important;
-    padding:2px 4px!important;
-    font-size:9px!important;
-  }
-  .manifest-table th{background:#e8e8e8!important}
-  .manifest-table tr.orange-row td{color:#b84000!important}
-  .manifest-table tr.green-row td{color:#005030!important}
-  .manifest-table tr.blue-row td{color:#002070!important}
-
-  /* Info boxes */
-  div[style*="grid-template-columns:1fr 1fr"]{
-    font-size:9px!important;
-  }
-
-  /* Charts — smaller to fit */
-  .chart-panel{border:0.5px solid #bbb!important;background:#fff!important;margin-bottom:4px!important}
-  .chart-wrap{height:150px!important}
-
-  /* Signature */
-  .sign-area{border:0.5px solid #bbb!important;height:70px!important}
-
-  /* Passenger manifest box */
-  #pax-manifest{font-size:9px!important}
-
-  /* Remove dark backgrounds everywhere */
-  .manifest-grid *{background:transparent!important;color:#000!important;border-color:#ccc!important}
-  .manifest-table th{background:#e8e8e8!important;color:#000!important}
-  .manifest-table tr.orange-row td{color:#b84000!important}
-  .manifest-table tr.green-row td{color:#005030!important}
-  .manifest-table tr.blue-row td{color:#002070!important}
-  input,select{background:#fff!important;border:0.5px solid #ccc!important;color:#000!important}
+  #page-manifest{display:block!important;padding:0;margin:0;width:100%;height:100%}
+  body{background:#fff!important;color:#000!important;margin:0;padding:0;font-size:8pt}
+  *{box-sizing:border-box!important;box-shadow:none!important;max-width:100%}
+  .manifest-grid{display:grid!important;grid-template-columns:58% 40%!important;gap:2%!important;width:100%!important}
+  #page-manifest>div:first-child{margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+  #page-manifest>div:first-child>div>h2{font-size:11pt!important}
+  .manifest-table{width:100%!important;font-size:7.5pt!important;border-collapse:collapse!important}
+  .manifest-table th,.manifest-table td{border:0.4pt solid #aaa!important;padding:2px 3px!important;font-size:7.5pt!important;color:#000!important}
+  .manifest-table th{background:#ddd!important;color:#000!important}
+  .manifest-table tr.orange-row td{color:#a03000!important}
+  .manifest-table tr.green-row td{color:#004020!important}
+  .manifest-table tr.blue-row td{color:#001870!important}
+  .chart-panel{border:0.4pt solid #aaa!important;background:#fff!important;margin-bottom:3px!important;padding:4px!important}
+  .chart-wrap{height:130px!important}
+  .sign-area{border:0.4pt solid #aaa!important;height:55px!important}
+  #pax-manifest{font-size:7.5pt!important}
+  div[style*="background:var(--surface)"]{background:#fff!important;border:0.4pt solid #ccc!important}
+  input,select{background:#fff!important;border:0.4pt solid #ccc!important;color:#000!important;font-size:7.5pt!important}
+  label{color:#555!important}
+  *{background:transparent!important;color:#000}
+  .manifest-table th{background:#ddd!important;color:#000!important}
 }
 </style>
 </head>
@@ -374,19 +341,19 @@ label{
     <!-- LEFT -->
     <div class="pax-panel">
       <div class="pax-row">
-        <div class="pax-header"><span class="seat-tag">F1 · Fwd Left</span><span class="weight-badge"><span id="v-sf">0</span> lbs</span></div>
+        <div class="pax-header"><span class="seat-tag">F1 · Fwd Left</span><span class="weight-badge"><span id="v-sf">0</span> <span class="unit-disp">lbs</span></span></div>
         <input type="text" id="n-sf" placeholder="Name" oninput="save('n-sf',this.value)">
-        <input type="range" id="s-sf" min="0" max="250" value="0" oninput="onSlider('sf',this.value)">
+        <input type="range" id="s-sf" min="0" max="250" value="0" oninput="onSliderKgAware('sf',this.value)">
       </div>
       <div class="pax-row">
-        <div class="pax-header"><span class="seat-tag">RL · Rear Left</span><span class="weight-badge"><span id="v-srl">0</span> lbs</span></div>
+        <div class="pax-header"><span class="seat-tag">RL · Rear Left</span><span class="weight-badge"><span id="v-srl">0</span> <span class="unit-disp">lbs</span></span></div>
         <input type="text" id="n-srl" placeholder="Name" oninput="save('n-srl',this.value)">
-        <input type="range" id="s-srl" min="0" max="250" value="0" oninput="onSlider('srl',this.value)">
+        <input type="range" id="s-srl" min="0" max="250" value="0" oninput="onSliderKgAware('srl',this.value)">
       </div>
       <div class="pax-row">
-        <div class="pax-header"><span class="seat-tag">RC · Rear Center</span><span class="weight-badge"><span id="v-src">0</span> lbs</span></div>
+        <div class="pax-header"><span class="seat-tag">RC · Rear Center</span><span class="weight-badge"><span id="v-src">0</span> <span class="unit-disp">lbs</span></span></div>
         <input type="text" id="n-src" placeholder="Name" oninput="save('n-src',this.value)">
-        <input type="range" id="s-src" min="0" max="250" value="0" oninput="onSlider('src',this.value)">
+        <input type="range" id="s-src" min="0" max="250" value="0" oninput="onSliderKgAware('src',this.value)">
       </div>
     </div>
 
@@ -412,43 +379,65 @@ label{
     <!-- RIGHT -->
     <div class="pax-panel">
       <div class="pax-row">
-        <div class="pax-header"><span class="seat-tag">P · Pilot</span><span class="weight-badge"><span id="v-ps">0</span> lbs</span></div>
+        <div class="pax-header"><span class="seat-tag">P · Pilot</span><span class="weight-badge"><span id="v-ps">0</span> <span class="unit-disp">lbs</span></span></div>
         <input type="text" id="n-ps" placeholder="Name" oninput="save('n-ps',this.value);syncPilotName(this.value)">
-        <input type="range" id="s-ps" min="0" max="250" value="0" oninput="onSlider('ps',this.value)">
+        <input type="range" id="s-ps" min="0" max="250" value="0" oninput="onSliderKgAware('ps',this.value)">
       </div>
       <div class="pax-row">
-        <div class="pax-header"><span class="seat-tag">RR · Rear Right</span><span class="weight-badge"><span id="v-srr">0</span> lbs</span></div>
+        <div class="pax-header"><span class="seat-tag">RR · Rear Right</span><span class="weight-badge"><span id="v-srr">0</span> <span class="unit-disp">lbs</span></span></div>
         <input type="text" id="n-srr" placeholder="Name" oninput="save('n-srr',this.value)">
-        <input type="range" id="s-srr" min="0" max="250" value="0" oninput="onSlider('srr',this.value)">
+        <input type="range" id="s-srr" min="0" max="250" value="0" oninput="onSliderKgAware('srr',this.value)">
       </div>
       <div class="pax-row">
-        <div class="pax-header"><span class="seat-tag">CARGO (lbs)</span><span class="weight-badge"><span id="v-g">0</span> lbs</span></div>
-        <input type="range" id="s-g" min="0" max="400" value="0" oninput="onSlider('g',this.value)">
+        <div class="pax-header"><span class="seat-tag">CARGO (lbs)</span><span class="weight-badge"><span id="v-g">0</span> <span class="unit-disp">lbs</span></span></div>
+        <input type="range" id="s-g" min="0" max="400" value="0" oninput="onSliderKgAware('g',this.value)">
       </div>
     </div>
   </div>
 
-  <!-- FUEL -->
-  <div class="fuel-panel">
-    <div class="fuel-section">
-      <label>Takeoff Fuel</label>
-      <input type="range" id="s-fuel" min="0" max="560" value="0" oninput="onFuelSlider('fuel',this.value)" style="accent-color:var(--blue);background:transparent;border:none;padding:0;width:100%">
-      <div style="display:flex;gap:6px;align-items:center"><span id="v-fuel" style="font-weight:700;color:var(--blue)">0</span> lbs <span style="color:var(--muted)">(<span id="pct-fuel">0</span>%)</span></div>
-      <div>Endurance: <strong id="end-fuel">—</strong></div>
+  <!-- FUEL + UNIT TOGGLE + 505 PHOTO -->
+  <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:5px;align-items:stretch">
+    <div class="fuel-panel" style="margin-bottom:0">
+      <div class="fuel-section">
+        <label>Takeoff Fuel</label>
+        <input type="range" id="s-fuel" min="0" max="560" value="0" oninput="onFuelSlider('fuel',this.value)" style="accent-color:var(--accent);background:transparent;border:none;padding:0;width:100%">
+        <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px">
+          <span id="v-fuel" style="font-weight:400;color:var(--accent)">0</span>
+          <span id="unit-label-fuel" style="color:var(--muted)">lbs</span>
+          <span style="color:var(--muted)">(<span id="pct-fuel">0</span>%)</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text2)">Endurance: <strong id="end-fuel" style="color:var(--green)">—</strong></div>
+      </div>
+      <div class="fuel-section">
+        <label>Landing Fuel</label>
+        <input type="range" id="s-fuelLand" min="0" max="560" value="0" oninput="onFuelSlider('fuelLand',this.value)" style="accent-color:var(--green);background:transparent;border:none;padding:0;width:100%">
+        <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px">
+          <span id="v-fuelLand" style="font-weight:400;color:var(--green)">0</span>
+          <span id="unit-label-fuell" style="color:var(--muted)">lbs</span>
+          <span style="color:var(--muted)">(<span id="pct-fuelLand">0</span>%)</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text2)">Reserve: <strong id="res-fuel" style="color:var(--orange)">—</strong></div>
+      </div>
+      <div class="fuel-tank">
+        <div class="fuel-fill" id="tank-fill" style="height:0%"></div>
+        <div class="fuel-land-fill" id="tank-land" style="height:0%"></div>
+      </div>
+      <div class="fuel-section">
+        <label>Consumption <span id="unit-label-c" style="font-size:9px">(lbs/hr)</span></label>
+        <input id="i-consump" type="number" value="210" min="1" style="width:80px" oninput="onConsumpChange(this.value)">
+        <div style="margin-top:6px">
+          <label style="display:block;margin-bottom:4px">Units</label>
+          <div style="display:flex;gap:4px">
+            <button id="btn-lbs" onclick="setUnit('lbs')" style="padding:3px 10px;font-size:10px;background:rgba(0,194,255,0.2);border:1px solid var(--accent);color:var(--accent)">LBS</button>
+            <button id="btn-kg" onclick="setUnit('kg')" style="padding:3px 10px;font-size:10px;background:transparent;border:1px solid var(--border);color:var(--text2)">KG</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="fuel-section">
-      <label>Landing Fuel</label>
-      <input type="range" id="s-fuelLand" min="0" max="560" value="0" oninput="onFuelSlider('fuelLand',this.value)" style="accent-color:var(--green);background:transparent;border:none;padding:0;width:100%">
-      <div style="display:flex;gap:6px;align-items:center"><span id="v-fuelLand" style="font-weight:700;color:var(--green)">0</span> lbs <span style="color:var(--muted)">(<span id="pct-fuelLand">0</span>%)</span></div>
-      <div>Reserve: <strong id="res-fuel">—</strong></div>
-    </div>
-    <div class="fuel-tank">
-      <div class="fuel-fill" id="tank-fill" style="height:0%"></div>
-      <div class="fuel-land-fill" id="tank-land" style="height:0%"></div>
-    </div>
-    <div class="fuel-section">
-      <label>Consumption (lbs/hr)</label>
-      <input id="i-consump" type="number" value="210" min="1" style="width:80px" oninput="onConsumpChange(this.value)">
+    <!-- 505 lateral photo -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;padding:6px;min-width:180px;max-width:240px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.25"></div>
+      <img id="img-505" style="width:100%;max-height:100px;object-fit:contain;opacity:.85" alt="Bell 505">
     </div>
   </div>
 
@@ -570,6 +559,14 @@ function injectImages() {
   document.getElementById('logo-kaek').src   = IMG_KAEK;
   document.getElementById('img-silueta').src = IMG_SILUETA;
   document.getElementById('m-logo-kaek').src = IMG_KAEK_LIGHT;
+  // 505 lateral photo
+  var i505 = document.getElementById('img-505');
+  if(i505) i505.src = IMG_505;
+  // Company logos in top bar
+  var cm = document.getElementById('logo-chipmong');
+  if(cm){ cm.src = IMG_CHIPMONG; cm.style.height='32px'; cm.style.display='block'; }
+  var bl = document.getElementById('logo-bell');
+  if(bl){ bl.src = IMG_BELLLOGO; bl.style.height='26px'; bl.style.display='block'; }
   loadCompanyLogo();
 }
 
@@ -751,6 +748,66 @@ function onSlider(key,val){
   n('v-'+key).textContent=val;
   save(key,val);
   updateSeatIcon(key,val);
+  recalc();
+}
+
+// ── UNIT TOGGLE ──
+var currentUnit = 'lbs';
+var LBS_TO_KG = 0.453592;
+var KG_TO_LBS = 2.20462;
+
+function setUnit(unit){
+  if(currentUnit===unit) return;
+  currentUnit=unit;
+  save('unit',unit);
+  // Update button styles
+  var btnL=n('btn-lbs'), btnK=n('btn-kg');
+  if(btnL&&btnK){
+    if(unit==='lbs'){
+      btnL.style.cssText='padding:3px 10px;font-size:10px;background:rgba(0,194,255,0.2);border:1px solid var(--accent);color:var(--accent)';
+      btnK.style.cssText='padding:3px 10px;font-size:10px;background:transparent;border:1px solid var(--border);color:var(--text2)';
+    } else {
+      btnK.style.cssText='padding:3px 10px;font-size:10px;background:rgba(0,194,255,0.2);border:1px solid var(--accent);color:var(--accent)';
+      btnL.style.cssText='padding:3px 10px;font-size:10px;background:transparent;border:1px solid var(--border);color:var(--text2)';
+    }
+  }
+  // Update slider values and maxes
+  ['sf','srl','src','ps','srr','g'].forEach(function(k){
+    var sl=n('s-'+k), vl=n('v-'+k);
+    if(!sl||!vl) return;
+    var lbsVal=state.weights[k];
+    if(unit==='kg'){
+      sl.max=k==='g'?Math.round(400*LBS_TO_KG):Math.round(250*LBS_TO_KG);
+      sl.value=Math.round(lbsVal*LBS_TO_KG);
+      vl.textContent=Math.round(lbsVal*LBS_TO_KG);
+    } else {
+      sl.max=k==='g'?400:250;
+      sl.value=lbsVal;
+      vl.textContent=lbsVal;
+    }
+  });
+  // Update unit labels
+  var uStr=unit==='kg'?'kg':'lbs';
+  document.querySelectorAll('.unit-disp').forEach(function(el){el.textContent=uStr;});
+  var ulc=n('unit-label-c'); if(ulc) ulc.textContent=unit==='kg'?'(kg/hr)':'(lbs/hr)';
+  var ulf=n('unit-label-fuel'); if(ulf) ulf.textContent=uStr;
+  var ulfl=n('unit-label-fuell'); if(ulfl) ulfl.textContent=uStr;
+  // Update consumption display
+  var cEl=n('i-consump');
+  if(cEl){
+    if(unit==='kg') cEl.value=Math.round(state.consump*LBS_TO_KG);
+    else cEl.value=state.consump;
+  }
+  recalc();
+}
+
+function onSliderKgAware(key,rawVal){
+  rawVal=+rawVal;
+  var lbsVal=currentUnit==='kg'?Math.round(rawVal*KG_TO_LBS):rawVal;
+  state.weights[key]=lbsVal;
+  n('v-'+key).textContent=rawVal;
+  save(key,lbsVal);
+  updateSeatIcon(key,lbsVal);
   recalc();
 }
 
@@ -998,6 +1055,7 @@ function restoreState(){
   var c=load('consump','210'); state.consump=+c; var cEl=n('i-consump'); if(cEl) cEl.value=c;
   var hi=+load('heliIdx',0); state.heliIdx=hi;
   buildHeliSelect(); var regEl=n('i-reg'); if(regEl) regEl.value=hi;
+  var savedUnit=load('unit','lbs'); if(savedUnit) setTimeout(function(){setUnit(savedUnit);},50);
   calcPerf(); recalc();
 }
 
