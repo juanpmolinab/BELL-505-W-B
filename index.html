@@ -68,8 +68,14 @@ label{
   font-family:var(--mono);color:var(--text2);
   font-size:10px;text-transform:uppercase;letter-spacing:.12em;
 }
-.page{display:none;padding:10px}
-.page.active{display:block}
+.page{display:none!important;padding:10px}
+.page.active{display:block!important}
+#page-calc.active{display:flex!important;flex-direction:column;gap:5px;padding:8px}
+/* Manifest and settings scroll freely */
+#page-manifest.active,#page-settings.active{
+  overflow-y:auto;
+  max-height:calc(100vh - 58px);
+}
 
 /* ── TOP BAR ── */
 .top-bar{
@@ -266,37 +272,239 @@ label{
 .settings-table td{padding:6px;border-bottom:1px solid var(--border);color:var(--text2)}
 .settings-table input{width:100%}
 
+
+/* ══════════════════════════════════════════
+   CALC PAGE LAYOUT
+   ══════════════════════════════════════════ */
+
+/* Base: flex column, all elements stack */
+#page-calc.active{
+  display:flex!important;
+  flex-direction:column;
+  gap:5px;
+  padding:6px;
+  box-sizing:border-box;
+}
+
+/* Info grid: compact on all sizes */
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+  gap:5px;padding:8px;margin-bottom:0;
+}
+
+/* Main body: single column on mobile */
+.main-body-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:5px;
+  margin-bottom:0;
+}
+
+/* Chart col: hidden on mobile (shown below fuel instead) */
+.chart-results-col{display:none}
+
+/* Mobile chart: visible below fuel */
+.mobile-chart{
+  display:block;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:8px;position:relative;overflow:hidden;
+}
+.mobile-chart::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.25}
+.mobile-chart .chart-wrap{height:260px}
+
+/* Fuel bottom row */
+.fuel-bottom-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:5px;
+  align-items:stretch;
+}
+.photo-505-panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;
+  padding:6px;width:130px;position:relative;overflow:hidden;
+}
+.photo-505-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.25}
+
+/* ── TABLET ≥768px ── */
+@media(min-width:768px){
+  body{overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  .top-bar{flex-shrink:0}
+  /* Manifest and settings need scroll - override body overflow */
+  body:has(#page-manifest.active),
+  body:has(#page-settings.active){
+    overflow-y:auto;
+    height:auto;
+  }
+  #page-calc.active{
+    flex:1;min-height:0;overflow:hidden;
+    padding:5px;gap:4px;
+  }
+  /* 4-column body: PAX | Silueta | PAX | Chart */
+  .main-body-grid{
+    grid-template-columns:1fr 170px 1fr 280px;
+    flex:1;min-height:0;align-items:stretch;
+  }
+  .chart-results-col{
+    display:flex;flex-direction:column;gap:3px;min-height:0;
+  }
+  /* Hide mobile chart — desktop chart is in chart-results-col */
+  .mobile-chart{display:none!important}
+  /* Fuel row fixed height */
+  .fuel-bottom-row{
+    grid-template-columns:1fr 170px;
+    flex-shrink:0;
+  }
+  .photo-505-panel{width:170px}
+  .heli-wrap{width:155px}
+  /* Compact everything */
+  .info-grid{padding:5px;gap:4px}
+  .pax-row{padding:5px 0;gap:3px}
+  .fuel-panel{padding:7px;gap:6px}
+  .fuel-tank{height:70px}
+  .fuel-section>div{font-size:11px}
+}
+
+/* ── LAPTOP ≥1100px: wider chart ── */
+@media(min-width:1100px){
+  .main-body-grid{
+    grid-template-columns:1fr 190px 1fr 320px;
+  }
+  .fuel-bottom-row{grid-template-columns:1fr 200px}
+  .photo-505-panel{width:200px}
+}
+
+/* ── LARGE DESKTOP ≥1400px ── */
+@media(min-width:1400px){
+  .main-body-grid{
+    grid-template-columns:1fr 210px 1fr 380px;
+  }
+}
+
+/* Mobile only overrides */
+@media(max-width:767px){
+  .fuel-bottom-row{grid-template-columns:1fr}
+  .photo-505-panel{display:none}
+  .info-grid{grid-template-columns:repeat(2,1fr)}
+  .main-body-grid .pax-panel:last-of-type{display:block}
+}
+
 @media(max-width:680px){
   .calc-grid{grid-template-columns:1fr}
   .fuel-panel{grid-template-columns:1fr 1fr}
   .manifest-grid{grid-template-columns:1fr}
   .info-grid{grid-template-columns:repeat(2,1fr)}
+  .fuel-bottom-row{grid-template-columns:1fr}
+  .photo-505-panel{display:none}
 }
+/* ══ FLIGHT MANIFEST PAGE 2 (screen preview) ══ */
+.flight-manifest-page{
+  display:none; /* shown only on print */
+  margin-top:20px;
+  background:#fff;color:#000;
+  font-family:Arial,sans-serif;font-size:10pt;
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;
+}
+/* Screen preview toggle */
+.flight-manifest-page.preview-visible{display:block}
+
+.fm-header{display:grid;grid-template-columns:120px 1fr 130px;gap:12px;align-items:start;border-bottom:2px solid #003;padding-bottom:10px;margin-bottom:12px}
+.fm-logo-zone{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.fm-title{font-size:16pt;font-weight:700;color:#00218a;letter-spacing:.04em}
+.fm-subtitle{font-size:12pt;font-weight:600;color:#333;margin-top:2px}
+.fm-route{font-size:10pt;color:#555;margin-top:3px}
+.fm-meta-table{font-size:8.5pt;width:100%;border-collapse:collapse}
+.fm-meta-table td{padding:1px 4px;color:#333}
+.fm-meta-table td:first-child{font-weight:600;color:#00218a;white-space:nowrap}
+
+.fm-pax-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9.5pt}
+.fm-pax-table th{background:#00218a;color:#fff;padding:5px 8px;text-align:left;font-size:8.5pt;letter-spacing:.06em;text-transform:uppercase}
+.fm-pax-table th:last-child,.fm-pax-table th:nth-child(4){text-align:center}
+.fm-pax-table td{border:0.5pt solid #bbb;padding:5px 8px;vertical-align:middle}
+.fm-pax-table td:nth-child(4),.fm-pax-table td:nth-child(5){text-align:center;font-weight:600}
+.fm-pax-table tbody tr:nth-child(even){background:#f5f7fb}
+.fm-total-row td{background:#e8edf7;border-top:1.5pt solid #00218a;padding:5px 8px}
+
+.fm-extra-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5pt}
+.fm-extra-table td{border:0.5pt solid #bbb;padding:4px 8px;text-align:center}
+.fm-section-label{background:#00218a;color:#fff;font-weight:600;font-size:8pt;text-transform:uppercase;text-align:center!important;white-space:nowrap}
+
+.fm-sig-block{display:grid;grid-template-columns:1fr 140px;gap:16px;border-top:1pt solid #ccc;padding-top:10px;margin-bottom:10px}
+.fm-sig-label{font-size:8pt;color:#555;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.fm-sig-name{font-size:10pt;font-weight:700;margin-bottom:6px}
+.fm-sig-draw{width:100%;height:70px;border:1pt solid #aaa;border-radius:3px;background:#fff;overflow:hidden}
+.fm-sig-date{font-size:12pt;font-weight:700;color:#00218a;margin-top:4px}
+.fm-sig-right{text-align:center;padding-top:4px}
+
+.fm-footer{border-top:1pt solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center}
+
 @media print{
-  @page{size:A4 landscape;margin:8mm 8mm 8mm 8mm}
-  html,body{width:100%;height:100%;overflow:hidden}
-  .top-bar,.nav-btn,button,.page:not(#page-manifest){display:none!important}
-  #page-manifest{display:block!important;padding:0;margin:0;width:100%;height:100%}
-  body{background:#fff!important;color:#000!important;margin:0;padding:0;font-size:8pt}
-  *{box-sizing:border-box!important;box-shadow:none!important;max-width:100%}
-  .manifest-grid{display:grid!important;grid-template-columns:58% 40%!important;gap:2%!important;width:100%!important}
-  #page-manifest>div:first-child{margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
-  #page-manifest>div:first-child>div>h2{font-size:11pt!important}
-  .manifest-table{width:100%!important;font-size:7.5pt!important;border-collapse:collapse!important}
-  .manifest-table th,.manifest-table td{border:0.4pt solid #aaa!important;padding:2px 3px!important;font-size:7.5pt!important;color:#000!important}
-  .manifest-table th{background:#ddd!important;color:#000!important}
-  .manifest-table tr.orange-row td{color:#a03000!important}
-  .manifest-table tr.green-row td{color:#004020!important}
-  .manifest-table tr.blue-row td{color:#001870!important}
-  .chart-panel{border:0.4pt solid #aaa!important;background:#fff!important;margin-bottom:3px!important;padding:4px!important}
-  .chart-wrap{height:130px!important}
-  .sign-area{border:0.4pt solid #aaa!important;height:55px!important}
-  #pax-manifest{font-size:7.5pt!important}
-  div[style*="background:var(--surface)"]{background:#fff!important;border:0.4pt solid #ccc!important}
-  input,select{background:#fff!important;border:0.4pt solid #ccc!important;color:#000!important;font-size:7.5pt!important}
-  label{color:#555!important}
-  *{background:transparent!important;color:#000}
-  .manifest-table th{background:#ddd!important;color:#000!important}
+  @page{ size:A4 landscape; margin:8mm 8mm 8mm 8mm }
+  html,body{ margin:0;padding:0;background:#fff!important }
+  /* Hide everything except manifest page */
+  .top-bar,.nav-btn,button,.page:not(#page-manifest){ display:none!important }
+  #page-manifest{ display:block!important;padding:0;margin:0 }
+  /* Hide screen toolbar */
+  #page-manifest>div:first-child{ display:none!important }
+  /* Hide passenger manifest div (info goes on page 2) */
+  #pax-manifest, #pax-manifest+*, [style*="PASSENGER MANIFEST"]{ display:none!important }
+
+  /* ── PAGE 1 HEADER: logos + title ── */
+  .print-page1-header{
+    display:flex!important;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:2pt solid #00218a;
+    padding-bottom:5px;
+    margin-bottom:8px;
+  }
+  .print-page1-header img{ height:40px;width:auto;object-fit:contain }
+  .print-page1-header h2{ font-size:13pt;font-weight:700;color:#00218a;letter-spacing:.06em;font-family:Arial }
+
+  /* ── PAGE 1 grid ── */
+  .manifest-grid{
+    display:grid!important;
+    grid-template-columns:56% 42%!important;
+    gap:2%!important;
+    page-break-after:always;
+    break-after:page;
+  }
+
+  /* Tables */
+  .manifest-table{ font-size:7pt!important;width:100%!important;border-collapse:collapse!important }
+  .manifest-table th,.manifest-table td{ border:0.4pt solid #aaa!important;padding:2px 4px!important;font-size:7pt!important;color:#000!important }
+  .manifest-table th{ background:#ddd!important;color:#000!important;text-align:center!important }
+  .manifest-table tr.orange-row td{ color:#a03000!important }
+  .manifest-table tr.green-row td{ color:#004020!important }
+  .manifest-table tr.blue-row td{ color:#002070!important }
+
+  /* Charts — full height, no clipping */
+  .chart-panel{ border:0.4pt solid #aaa!important;background:#fff!important;padding:4px!important;margin-bottom:4px!important;overflow:visible!important }
+  .chart-wrap{ height:180px!important;overflow:visible!important }
+  canvas{ max-width:100%!important;max-height:100%!important }
+
+  /* Signature */
+  .sign-area{ border:0.4pt solid #aaa!important;height:60px!important }
+
+  /* Info boxes */
+  div[style*="background:var(--surface)"]{ background:#fff!important;border:0.4pt solid #ccc!important }
+  input,select{ background:#fff!important;border:0.4pt solid #ccc!important;color:#000!important;font-size:7pt!important }
+  label{ color:#555!important }
+  *{ box-shadow:none!important }
+
+  /* ── PAGE 2 — Flight manifest ── */
+  .flight-manifest-page{
+    display:block!important;
+    page-break-before:always;
+    break-before:page;
+    margin:0;padding:0;
+    border:none!important;
+    font-family:Arial,sans-serif;font-size:10pt;color:#000;background:#fff;
+  }
 }
 </style>
 </head>
@@ -314,6 +522,8 @@ label{
 
 <!-- CALCULATOR -->
 <div id="page-calc" class="page active">
+
+  <!-- INFO GRID full width -->
   <div class="info-grid">
     <div class="field"><label>Pilot</label><input id="i-pilot" type="text" placeholder="Name" oninput="save('pilot',this.value);syncPilotName(this.value)"></div>
     <div class="field"><label>Registration</label><select id="i-reg" onchange="onHeliChange()"></select></div>
@@ -327,18 +537,10 @@ label{
     <div class="field"><label>QNH</label><input id="i-qnh" type="text" placeholder="hPa" oninput="save('qnh',this.value)"></div>
   </div>
 
-  <div class="results-bar">
-    <div id="cg-status" class="status-badge ok">✓ IN LIMITS</div>
-    <div class="result-sep"></div>
-    <div class="result-cell"><div class="val orange" id="r-tow">0</div><div class="lbl">Takeoff Weight</div><div class="sub" id="r-tow-cg">CG: —</div></div>
-    <div class="result-sep"></div>
-    <div class="result-cell"><div class="val green" id="r-lw">0</div><div class="lbl">Landing Weight</div><div class="sub" id="r-lw-cg">CG: —</div></div>
-    <div class="result-sep"></div>
-    <div class="result-cell"><div class="val blue-c" id="r-zfw">0</div><div class="lbl">Zero Fuel Weight</div><div class="sub" id="r-zfw-cg">CG: —</div></div>
-  </div>
+  <!-- MAIN BODY: col1=PAX-left | col2=Silueta | col3=PAX-right | col4=Chart+Results -->
+  <div class="main-body-grid">
 
-  <div class="calc-grid">
-    <!-- LEFT -->
+    <!-- COL 1: PAX left -->
     <div class="pax-panel">
       <div class="pax-row">
         <div class="pax-header"><span class="seat-tag">F1 · Fwd Left</span><span class="weight-badge"><span id="v-sf">0</span> <span class="unit-disp">lbs</span></span></div>
@@ -357,26 +559,22 @@ label{
       </div>
     </div>
 
-    <!-- HELI CENTER con silueta y asientos superpuestos -->
+    <!-- COL 2: Silueta helicoptero -->
     <div class="heli-center">
       <div style="font-size:9px;color:var(--muted);margin-bottom:3px;letter-spacing:.08em">NOSE ▲</div>
       <div class="heli-wrap" id="heli-wrap">
         <img class="silueta" id="img-silueta" alt="Bell 505 top view">
-
-        <!-- Forward seats -->
         <div class="seat-icon" id="si-sf"  style="top:27%;left:35%"><div class="seat-box">F1</div></div>
         <div class="seat-icon" id="si-ps"  style="top:27%;left:65%"><div class="seat-box">P</div></div>
-        <!-- Rear seats -->
         <div class="seat-icon" id="si-srl" style="top:50%;left:27%"><div class="seat-box">RL</div></div>
         <div class="seat-icon" id="si-src" style="top:50%;left:50%"><div class="seat-box">RC</div></div>
         <div class="seat-icon" id="si-srr" style="top:50%;left:73%"><div class="seat-box">RR</div></div>
-        <!-- Cargo -->
         <div class="seat-icon cargo-icon" id="si-g" style="top:70%;left:50%"><div class="seat-box">CARGO</div></div>
       </div>
       <div style="font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.08em">▼ TAIL</div>
     </div>
 
-    <!-- RIGHT -->
+    <!-- COL 3: PAX right -->
     <div class="pax-panel">
       <div class="pax-row">
         <div class="pax-header"><span class="seat-tag">P · Pilot</span><span class="weight-badge"><span id="v-ps">0</span> <span class="unit-disp">lbs</span></span></div>
@@ -389,63 +587,93 @@ label{
         <input type="range" id="s-srr" min="0" max="250" value="0" oninput="onSliderKgAware('srr',this.value)">
       </div>
       <div class="pax-row">
-        <div class="pax-header"><span class="seat-tag">CARGO (lbs)</span><span class="weight-badge"><span id="v-g">0</span> <span class="unit-disp">lbs</span></span></div>
+        <div class="pax-header"><span class="seat-tag">CARGO</span><span class="weight-badge"><span id="v-g">0</span> <span class="unit-disp">lbs</span></span></div>
         <input type="range" id="s-g" min="0" max="400" value="0" oninput="onSliderKgAware('g',this.value)">
       </div>
     </div>
-  </div>
 
-  <!-- FUEL + UNIT TOGGLE + 505 PHOTO -->
-  <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:5px;align-items:stretch">
+    <!-- COL 4: Chart + Results -->
+    <div class="chart-results-col">
+      <div class="chart-panel" style="flex:1;margin-bottom:4px;min-height:0">
+        <div class="chart-wrap" style="height:100%;min-height:180px"><canvas id="mainChart"></canvas></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px;display:flex;gap:0;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.25"></div>
+        <div style="flex:1;text-align:center;padding:2px 4px;border-right:1px solid var(--border2)">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--orange);letter-spacing:.08em">TAKEOFF</div>
+          <div style="font-family:var(--mono);font-size:14px;color:var(--orange)" id="r-tow">0</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text2)" id="r-tow-cg">CG —</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:2px 4px;border-right:1px solid var(--border2)">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--green);letter-spacing:.08em">LANDING</div>
+          <div style="font-family:var(--mono);font-size:14px;color:var(--green)" id="r-lw">0</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text2)" id="r-lw-cg">CG —</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:2px 4px">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--accent);letter-spacing:.08em">ZERO FUEL</div>
+          <div style="font-family:var(--mono);font-size:14px;color:var(--accent)" id="r-zfw">0</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text2)" id="r-zfw-cg">CG —</div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:3px 0">
+        <div id="cg-status" class="status-badge ok">✓ IN LIMITS</div>
+      </div>
+    </div>
+
+  </div><!-- end main-body-grid -->
+
+  <!-- FUEL ROW bottom -->
+  <div class="fuel-bottom-row">
     <div class="fuel-panel" style="margin-bottom:0">
       <div class="fuel-section">
         <label>Takeoff Fuel</label>
         <input type="range" id="s-fuel" min="0" max="560" value="0" oninput="onFuelSlider('fuel',this.value)" style="accent-color:var(--accent);background:transparent;border:none;padding:0;width:100%">
         <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px">
-          <span id="v-fuel" style="font-weight:400;color:var(--accent)">0</span>
+          <span id="v-fuel" style="color:var(--accent)">0</span>
           <span id="unit-label-fuel" style="color:var(--muted)">lbs</span>
           <span style="color:var(--muted)">(<span id="pct-fuel">0</span>%)</span>
         </div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text2)">Endurance: <strong id="end-fuel" style="color:var(--green)">—</strong></div>
+        <div style="font-family:var(--mono);font-size:11px">Endurance: <strong id="end-fuel" style="color:var(--green)">—</strong></div>
       </div>
       <div class="fuel-section">
         <label>Landing Fuel</label>
         <input type="range" id="s-fuelLand" min="0" max="560" value="0" oninput="onFuelSlider('fuelLand',this.value)" style="accent-color:var(--green);background:transparent;border:none;padding:0;width:100%">
         <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px">
-          <span id="v-fuelLand" style="font-weight:400;color:var(--green)">0</span>
+          <span id="v-fuelLand" style="color:var(--green)">0</span>
           <span id="unit-label-fuell" style="color:var(--muted)">lbs</span>
           <span style="color:var(--muted)">(<span id="pct-fuelLand">0</span>%)</span>
         </div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text2)">Reserve: <strong id="res-fuel" style="color:var(--orange)">—</strong></div>
+        <div style="font-family:var(--mono);font-size:11px">Reserve: <strong id="res-fuel" style="color:var(--orange)">—</strong></div>
       </div>
       <div class="fuel-tank">
         <div class="fuel-fill" id="tank-fill" style="height:0%"></div>
         <div class="fuel-land-fill" id="tank-land" style="height:0%"></div>
       </div>
       <div class="fuel-section">
-        <label>Consumption <span id="unit-label-c" style="font-size:9px">(lbs/hr)</span></label>
+        <label>Consumption <span id="unit-label-c">(lbs/hr)</span></label>
         <input id="i-consump" type="number" value="210" min="1" style="width:80px" oninput="onConsumpChange(this.value)">
-        <div style="margin-top:6px">
-          <label style="display:block;margin-bottom:4px">Units</label>
-          <div style="display:flex;gap:4px">
-            <button id="btn-lbs" onclick="setUnit('lbs')" style="padding:3px 10px;font-size:10px;background:rgba(0,194,255,0.2);border:1px solid var(--accent);color:var(--accent)">LBS</button>
-            <button id="btn-kg" onclick="setUnit('kg')" style="padding:3px 10px;font-size:10px;background:transparent;border:1px solid var(--border);color:var(--text2)">KG</button>
-          </div>
+        <div style="margin-top:4px;display:flex;gap:4px">
+          <button id="btn-lbs" onclick="setUnit('lbs')" style="padding:3px 8px;font-size:10px;background:rgba(0,194,255,0.2);border:1px solid var(--accent);color:var(--accent)">LBS</button>
+          <button id="btn-kg"  onclick="setUnit('kg')"  style="padding:3px 8px;font-size:10px;background:transparent;border:1px solid var(--border);color:var(--text2)">KG</button>
         </div>
       </div>
     </div>
     <!-- 505 lateral photo -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;padding:6px;min-width:180px;max-width:240px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.25"></div>
-      <img id="img-505" style="width:100%;max-height:100px;object-fit:contain;opacity:.85" alt="Bell 505">
+    <div class="photo-505-panel">
+      <img id="img-505" style="width:100%;height:100%;object-fit:contain;opacity:.85" alt="Bell 505">
     </div>
+  </div><!-- end fuel-bottom-row -->
+
+  <!-- MOBILE ONLY CHART -->
+  <div class="mobile-chart">
+    <div class="chart-wrap"><canvas id="mobileChart"></canvas></div>
   </div>
 
-  <div class="chart-panel"><div class="chart-wrap"><canvas id="mainChart"></canvas></div></div>
-</div>
+</div><!-- end page-calc -->
 
 <!-- MANIFEST -->
 <div id="page-manifest" class="page">
+  <!-- Screen toolbar (hidden on print) -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
     <div style="display:flex;align-items:center;gap:10px">
       <img id="m-logo-kaek" style="height:52px;width:auto" alt="KAEK">
@@ -457,6 +685,14 @@ label{
       <button class="success" onclick="window.print()">Print / PDF</button>
     </div>
   </div>
+
+  <!-- PAGE 1 PRINT HEADER (only visible on print) -->
+  <div class="print-page1-header" style="display:none">
+    <img id="p1-logo-kaek" alt="KAEK">
+    <h2>WEIGHT &amp; BALANCE MANIFEST · BELL 505</h2>
+    <img id="p1-logo-company" style="display:none" alt="">
+  </div>
+
   <div class="manifest-grid">
     <div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:10px;font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
@@ -473,10 +709,6 @@ label{
         <thead><tr><th>Item</th><th>Mass (lbs)</th><th>Long Arm (in)</th><th>Long Moment</th><th>Lat Arm (in)</th><th>Lat Moment</th></tr></thead>
         <tbody id="manifest-tbody"></tbody>
       </table>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-top:10px">
-        <div style="font-weight:700;margin-bottom:6px;font-size:12px">PASSENGER MANIFEST</div>
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px" id="pax-manifest"></div>
-      </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="chart-panel" style="margin-bottom:0">
@@ -493,9 +725,101 @@ label{
       </div>
     </div>
   </div>
-</div>
 
-<!-- SETTINGS -->
+  <!-- ══════════════════════════════════════
+       PAGE 2 — FLIGHT MANIFEST (Word style)
+       ══════════════════════════════════════ -->
+  <div id="flight-manifest-p2" class="flight-manifest-page">
+    <!-- Header -->
+    <div class="fm-header">
+      <div class="fm-logo-zone">
+        <img id="fm-logo-kaek" style="height:60px;width:auto" alt="KAEK">
+        <img id="fm-logo-company" style="height:50px;width:auto;object-fit:contain;display:none" alt="Co">
+      </div>
+      <div class="fm-title-zone">
+        <div class="fm-title">FLIGHT MANIFEST</div>
+        <div class="fm-subtitle">Bell 505 &nbsp;·&nbsp; <span id="fm-reg">—</span></div>
+        <div class="fm-route"><span id="fm-from2">—</span> → <span id="fm-to2">—</span></div>
+      </div>
+      <div class="fm-meta-zone">
+        <table class="fm-meta-table">
+          <tr><td>Date</td><td id="fm-date">—</td></tr>
+          <tr><td>Dep</td><td id="fm-dep">—</td></tr>
+          <tr><td>Arr</td><td id="fm-arr">—</td></tr>
+          <tr><td>IGE</td><td id="fm-ige2">—</td></tr>
+          <tr><td>OGE</td><td id="fm-oge2">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Passenger table -->
+    <table class="fm-pax-table">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th>PASSENGER NAME</th>
+          <th style="width:60px">SEAT</th>
+          <th style="width:70px">WEIGHT</th>
+          <th style="width:70px">kg</th>
+        </tr>
+      </thead>
+      <tbody id="fm-pax-tbody"></tbody>
+      <tfoot>
+        <tr class="fm-total-row">
+          <td colspan="3" style="text-align:right;padding-right:12px;font-weight:700">TOTAL PASSENGERS</td>
+          <td id="fm-total-lbs" style="font-weight:700;text-align:center">—</td>
+          <td id="fm-total-kg"  style="font-weight:700;text-align:center">—</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Fuel & Cargo row -->
+    <table class="fm-extra-table">
+      <tr>
+        <td class="fm-section-label">TAKEOFF FUEL</td>
+        <td id="fm-fuel-lbs">—</td><td id="fm-fuel-kg">—</td>
+        <td class="fm-section-label">LANDING FUEL</td>
+        <td id="fm-lfuel-lbs">—</td><td id="fm-lfuel-kg">—</td>
+        <td class="fm-section-label">CARGO</td>
+        <td id="fm-cargo-lbs">—</td><td id="fm-cargo-kg">—</td>
+      </tr>
+      <tr>
+        <td class="fm-section-label">TOW</td>
+        <td id="fm-tow-lbs">—</td><td id="fm-tow-kg">—</td>
+        <td class="fm-section-label">LW</td>
+        <td id="fm-lw-lbs">—</td><td id="fm-lw-kg">—</td>
+        <td class="fm-section-label">ZFW</td>
+        <td id="fm-zfw-lbs">—</td><td id="fm-zfw-kg">—</td>
+      </tr>
+    </table>
+
+    <!-- Signature block -->
+    <div class="fm-sig-block">
+      <div class="fm-sig-left">
+        <div class="fm-sig-label">Pilot in Command · IAW SSCA CCAR Part 8</div>
+        <div class="fm-sig-name">Name: <span id="fm-pilot-name">—</span></div>
+        <div class="fm-sig-line">
+          <div class="fm-sig-draw">
+            <canvas id="canvasSignP2" style="width:100%;height:100%;cursor:crosshair"></canvas>
+          </div>
+          <div style="font-size:8pt;color:#666;margin-top:3px">Signature</div>
+        </div>
+      </div>
+      <div class="fm-sig-right">
+        <div class="fm-sig-label">Date</div>
+        <div class="fm-sig-date" id="fm-sig-date">—</div>
+        <div style="margin-top:16px" class="fm-sig-label">CG Status</div>
+        <div id="fm-cg-status2" style="font-weight:700;font-size:11pt">—</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="fm-footer">
+      KAEK Aviation · Bell 505 Weight &amp; Balance System · <span id="fm-footer-date">—</span>
+    </div>
+  </div>
+
+</div><!-- end page-manifest -->
 <div id="page-settings" class="page">
   <h2 style="font-size:15px;margin-bottom:10px;font-family:var(--mono);letter-spacing:.1em;color:var(--accent)">CONFIGURATION</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -673,7 +997,7 @@ const DEFAULTS = {
 };
 
 const state = {weights:{sf:0,srl:0,src:0,ps:0,srr:0,g:0},fuel:0,fuelLand:0,consump:210,heliIdx:0,tow:0,lw:0,zfw:0,towCG:0,lwCG:0,zfwCG:0,towLatCG:0,lwLatCG:0,zfwLatCG:0};
-const charts = {main:null,manifest:null,lateral:null};
+const charts = {main:null,manifest:null,lateral:null,mobile:null};
 
 const n = id => document.getElementById(id);
 const load = (k,d='') => { const v=localStorage.getItem('wb505_'+k); return v!==null?v:d; };
@@ -913,8 +1237,19 @@ function buildLongDS(){
 
 function updateChart(){
   const ds=buildLongDS(), cfg=makeConfig(ds,158,174,'Longitudinal CG (in)');
-  if(charts.main){charts.main.data.datasets=ds;charts.main.update('none');}
-  else{charts.main=new Chart(n('mainChart').getContext('2d'),cfg);}
+  // Desktop chart
+  const dc=n('mainChart');
+  if(dc){
+    if(charts.main){charts.main.data.datasets=ds;charts.main.update('none');}
+    else{charts.main=new Chart(dc.getContext('2d'),cfg);}
+  }
+  // Mobile chart (same data, separate instance)
+  const mc=n('mobileChart');
+  if(mc){
+    const ds2=buildLongDS(), cfg2=makeConfig(ds2,158,174,'CG (in)');
+    if(charts.mobile){charts.mobile.data.datasets=ds2;charts.mobile.update('none');}
+    else{charts.mobile=new Chart(mc.getContext('2d'),cfg2);}
+  }
 }
 
 function updateManifestCharts(){
@@ -969,6 +1304,103 @@ function updateManifest(){
     paxEl.innerHTML=pax.map(function(p){return '<span style="color:var(--muted)">'+p[0]+':</span><span>'+p[1]+'</span>';}).join('');
   }
   updateManifestCharts();
+  updateFlightManifestP2();
+}
+
+function updateFlightManifestP2(){
+  var w=state.weights, fuelW=state.fuel, fuelLandW=state.fuelLand;
+  var LBS_KG=0.453592;
+  var fleet=getFleet(), h=fleet[state.heliIdx]||fleet[0];
+  var setEl=function(id,v){var el=n(id);if(el)el.textContent=v||'—';};
+
+  // Header data
+  setEl('fm-reg',  h.id);
+  setEl('fm-from2', n('i-from')&&n('i-from').value);
+  setEl('fm-to2',   n('i-to')&&n('i-to').value);
+  // Dep = From, Arr = To
+  setEl('fm-dep',   n('i-from')&&n('i-from').value);
+  setEl('fm-arr',   n('i-to')&&n('i-to').value);
+  setEl('fm-ige2',  n('i-ige')&&n('i-ige').value ? n('i-ige').value+' lbs' : '—');
+  setEl('fm-oge2',  n('i-oge')&&n('i-oge').value ? n('i-oge').value+' lbs' : '—');
+  var dateEl=n('m-date'); setEl('fm-date', dateEl&&dateEl.value ? dateEl.value : new Date().toLocaleDateString());
+
+  // Page 1 print header logos
+  var p1k=n('p1-logo-kaek'); if(p1k) p1k.src=IMG_KAEK_LIGHT;
+  var savedLogo=localStorage.getItem('wb505_company_logo');
+  var p1c=n('p1-logo-company'); if(p1c&&savedLogo){p1c.src=savedLogo;p1c.style.display='block';}
+
+  // Mirror logo for page 2
+  var fmLogoKaek=n('fm-logo-kaek'); if(fmLogoKaek) fmLogoKaek.src=IMG_KAEK_LIGHT;
+  var fmLogoCo=n('fm-logo-company');
+  if(fmLogoCo&&savedLogo){fmLogoCo.src=savedLogo;fmLogoCo.style.display='block';}
+
+  // Pilot name
+  var pilotName=(n('n-ps')&&n('n-ps').value)||'—';
+  setEl('fm-pilot-name', pilotName);
+
+  // Passenger rows
+  var paxData=[
+    {seat:'P · Pilot',       name:(n('n-ps')&&n('n-ps').value)||'',  w:w.ps},
+    {seat:'F1 · Fwd Left',   name:(n('n-sf')&&n('n-sf').value)||'',  w:w.sf},
+    {seat:'RL · Rear Left',  name:(n('n-srl')&&n('n-srl').value)||'',w:w.srl},
+    {seat:'RC · Center',     name:(n('n-src')&&n('n-src').value)||'',w:w.src},
+    {seat:'RR · Rear Right', name:(n('n-srr')&&n('n-srr').value)||'',w:w.srr},
+  ];
+  var tbody=n('fm-pax-tbody');
+  if(tbody){
+    tbody.innerHTML=paxData.map(function(p,i){
+      var kg=p.w?(p.w*LBS_KG).toFixed(1):'';
+      var wShow=p.w||'';
+      return '<tr>'+
+        '<td style="text-align:center;color:#888">'+(i+1)+'</td>'+
+        '<td>'+(p.name||'<span style="color:#bbb">—</span>')+'</td>'+
+        '<td style="text-align:center;font-size:8pt;color:#555">'+p.seat+'</td>'+
+        '<td style="text-align:center">'+(wShow?wShow+' lbs':'')+'</td>'+
+        '<td style="text-align:center">'+(kg?kg+' kg':'')+'</td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  // Totals
+  var totalLbs=w.ps+w.sf+w.srl+w.src+w.srr;
+  var totalKg=(totalLbs*LBS_KG).toFixed(1);
+  setEl('fm-total-lbs', totalLbs+' lbs');
+  setEl('fm-total-kg',  totalKg+' kg');
+
+  // Fuel & weights
+  setEl('fm-fuel-lbs',  fuelW+' lbs');
+  setEl('fm-fuel-kg',   (fuelW*LBS_KG).toFixed(1)+' kg');
+  setEl('fm-lfuel-lbs', fuelLandW+' lbs');
+  setEl('fm-lfuel-kg',  (fuelLandW*LBS_KG).toFixed(1)+' kg');
+  setEl('fm-cargo-lbs', w.g+' lbs');
+  setEl('fm-cargo-kg',  (w.g*LBS_KG).toFixed(1)+' kg');
+  setEl('fm-tow-lbs',   state.tow+' lbs');
+  setEl('fm-tow-kg',    (state.tow*LBS_KG).toFixed(1)+' kg');
+  setEl('fm-lw-lbs',    state.lw+' lbs');
+  setEl('fm-lw-kg',     (state.lw*LBS_KG).toFixed(1)+' kg');
+  setEl('fm-zfw-lbs',   state.zfw+' lbs');
+  setEl('fm-zfw-kg',    (state.zfw*LBS_KG).toFixed(1)+' kg');
+
+  // CG Status
+  var badge=n('cg-status');
+  setEl('fm-cg-status2', badge?badge.textContent:'—');
+
+  // Date
+  setEl('fm-footer-date', new Date().toLocaleDateString());
+  var sigDateEl=n('m-date');
+  setEl('fm-sig-date', sigDateEl&&sigDateEl.value ? sigDateEl.value : new Date().toLocaleDateString());
+
+  // Mirror signature to p2 canvas
+  setTimeout(function(){
+    var src=n('canvasSign'), dst=n('canvasSignP2');
+    if(src&&dst){
+      dst.width=src.parentElement.offsetWidth||300;
+      dst.height=src.parentElement.offsetHeight||70;
+      var ctx=dst.getContext('2d');
+      ctx.clearRect(0,0,dst.width,dst.height);
+      try{ctx.drawImage(src,0,0,dst.width,dst.height);}catch(e){}
+    }
+  },100);
 }
 
 function showPage(id,btn){
