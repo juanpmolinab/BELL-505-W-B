@@ -1424,41 +1424,220 @@ function updateFlightManifestP2(){
   },100);
 }
 
-// ── SMART PRINT: works on iOS Safari, Chrome mobile, desktop ──
+// ── SMART PRINT: popup window approach — works on ALL platforms ──
 function smartPrint(){
-  // Make sure page 2 data is up to date
   updateFlightManifestP2();
 
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  var isAndroid = /android/i.test(navigator.userAgent);
+  // Give charts and DOM time to update
+  setTimeout(function(){
+    // Capture signature canvas as image
+    var sigSrc = '';
+    var sigCanvas = document.getElementById('canvasSign');
+    if(sigCanvas) try{ sigSrc = sigCanvas.toDataURL('image/png'); }catch(e){}
 
-  // iOS Safari: window.print() works but needs a small delay
-  // iOS Chrome: blocked — must use workaround
-  // Android Chrome: window.print() usually works
-  // Desktop: window.print() works fine
+    // Capture manifest chart as image
+    var chartSrc = '';
+    var mChart = document.getElementById('manifestChart');
+    if(mChart) try{ chartSrc = mChart.toDataURL('image/png'); }catch(e){}
 
-  if(isIOS){
-    // iOS: setTimeout trick needed for Safari, Chrome on iOS is blocked
-    // Show instructions for Chrome iOS
-    var isChromeiOS = /CriOS/.test(navigator.userAgent);
-    if(isChromeiOS){
-      // Chrome on iOS blocks window.print() — open in Safari instead
-      alert('Para imprimir en iPhone/iPad:\n\n1. Abre este link en Safari\n2. Usa el botón Compartir (⬆️)\n3. Selecciona "Imprimir"\n\nO presiona OK para intentar igualmente.');
+    var latSrc = '';
+    var lChart = document.getElementById('lateralChart');
+    if(lChart) try{ latSrc = lChart.toDataURL('image/png'); }catch(e){}
+
+    // Gather page 2 data
+    var g = function(id){ var el=document.getElementById(id); return el?el.textContent||el.value||'—':'—'; };
+    var p2 = document.getElementById('flight-manifest-p2');
+    var p2html = p2 ? p2.innerHTML : '';
+
+    // Build page 1 content
+    var mGrid = document.querySelector('.manifest-grid');
+    var p1Left  = document.querySelector('.manifest-grid>div:first-child');
+    var p1Right = document.querySelector('.manifest-grid>div:last-child');
+    var p1LeftHTML  = p1Left  ? p1Left.innerHTML  : '';
+    var p1RightHTML = p1Right ? p1Right.innerHTML : '';
+
+    // Get logo src
+    var kaekLogo = document.getElementById('m-logo-kaek');
+    var kaekSrc  = kaekLogo ? kaekLogo.src : '';
+    var coLogo   = document.getElementById('m-logo-company');
+    var coSrc    = (coLogo && coLogo.style.display!=='none') ? coLogo.src : '';
+
+    var printHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Bell 505 · Manifest</title>' +
+    '<style>' +
+    'body{margin:0;padding:0;font-family:Arial,sans-serif;font-size:9pt;color:#000;background:#fff}' +
+    '@page{size:A4 landscape;margin:8mm}' +
+    '.page-wrap{width:100%;box-sizing:border-box;padding:4mm}' +
+    '.page-break{page-break-after:always;break-after:page}' +
+
+    /* Header shared */
+    '.print-header{display:flex;justify-content:space-between;align-items:center;' +
+      'border-bottom:2pt solid #00218a;padding-bottom:5px;margin-bottom:8px}' +
+    '.print-header img{height:38px;width:auto;object-fit:contain}' +
+    '.print-header h2{font-size:12pt;font-weight:700;color:#00218a;margin:0;font-family:Arial;letter-spacing:.05em}' +
+    '.print-header .right-logo{min-width:60px;text-align:right}' +
+
+    /* P1 grid */
+    '.p1-grid{display:grid;grid-template-columns:56% 42%;gap:2%;width:100%}' +
+    'table{width:100%;border-collapse:collapse;font-size:7pt}' +
+    'th,td{border:.4pt solid #aaa;padding:2px 4px}' +
+    'th{background:#ddd;text-align:center}' +
+    '.or td{color:#a03000}.gr td{color:#004020}.bl td{color:#002070}' +
+    '.tr-bold{font-weight:700;border-top:1.5pt solid #00218a}' +
+    '.sign-box{border:.4pt solid #aaa;height:55px;width:100%;display:block}' +
+    '.label{font-size:8pt;color:#555;text-transform:uppercase;letter-spacing:.06em}' +
+    'input-disp{display:inline-block;border:.4pt solid #ccc;padding:1px 4px;font-size:7pt;background:#fff}' +
+
+    /* P2 styles */
+    '.fm-header{display:grid;grid-template-columns:110px 1fr 120px;gap:10px;' +
+      'border-bottom:2pt solid #00218a;padding-bottom:8px;margin-bottom:10px}' +
+    '.fm-title{font-size:14pt;font-weight:700;color:#00218a}' +
+    '.fm-sub{font-size:10pt;font-weight:600;color:#333;margin-top:2px}' +
+    '.fm-route{font-size:9pt;color:#555;margin-top:2px}' +
+    '.fm-meta td{padding:1px 4px;font-size:8pt}.fm-meta td:first-child{font-weight:700;color:#00218a}' +
+    '.pax-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9pt}' +
+    '.pax-table th{background:#00218a;color:#fff;padding:4px 6px;text-align:left;font-size:8pt;text-transform:uppercase}' +
+    '.pax-table td{border:.4pt solid #bbb;padding:4px 6px}' +
+    '.pax-table td:nth-child(4),.pax-table td:nth-child(5){text-align:center;font-weight:600}' +
+    '.pax-even{background:#f5f7fb}' +
+    '.pax-total td{background:#e8edf7;border-top:1.5pt solid #00218a;font-weight:700}' +
+    '.extra-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt}' +
+    '.extra-table td{border:.4pt solid #bbb;padding:3px 6px;text-align:center}' +
+    '.extra-label{background:#00218a;color:#fff;font-weight:700;font-size:7.5pt;text-transform:uppercase}' +
+    '.sig-grid{display:grid;grid-template-columns:1fr 130px;gap:14px;border-top:1pt solid #ccc;padding-top:8px}' +
+    '.sig-box{border:1pt solid #aaa;height:65px;background:#fff;overflow:hidden}' +
+    '.fm-footer{border-top:.5pt solid #ccc;padding-top:5px;font-size:7pt;color:#888;text-align:center;margin-top:8px}' +
+    '-webkit-print-color-adjust:exact;print-color-adjust:exact' +
+    '</style></head><body>';
+
+    // ── PAGE 1 ──
+    printHTML += '<div class="page-wrap page-break">';
+
+    // Header p1
+    printHTML += '<div class="print-header">' +
+      '<img src="'+ kaekSrc +'" alt="KAEK">' +
+      '<h2>WEIGHT &amp; BALANCE MANIFEST · BELL 505</h2>' +
+      '<div class="right-logo">' + (coSrc ? '<img src="'+coSrc+'" alt="">' : '') + '</div>' +
+      '</div>';
+
+    // Rebuild manifest table from live DOM data
+    var tbody = document.getElementById('manifest-tbody');
+    var tbodyHTML = tbody ? tbody.innerHTML : '';
+    // Flight info box
+    var infoBox = document.querySelector('#page-manifest .manifest-grid > div:first-child > div:first-child');
+    var infoHTML = infoBox ? infoBox.outerHTML : '';
+
+    printHTML += '<div class="p1-grid">';
+    // Left col
+    printHTML += '<div>';
+    printHTML += infoHTML;
+    printHTML += '<table><thead><tr><th>Item</th><th>Mass (lbs)</th><th>Long Arm</th><th>Long Moment</th><th>Lat Arm</th><th>Lat Moment</th></tr></thead><tbody>' + tbodyHTML + '</tbody></table>';
+    // Signature
+    printHTML += '<div style="margin-top:8px"><div class="label">Pilot Signature: '+ g('sig-name') +'</div>';
+    printHTML += '<div class="sign-box"><img src="'+ sigSrc +'" style="width:100%;height:100%;object-fit:contain"></div></div>';
+    printHTML += '</div>';
+    // Right col
+    printHTML += '<div>';
+    printHTML += '<div class="label" style="margin-bottom:4px">Longitudinal CG</div>';
+    printHTML += '<img src="'+ chartSrc +'" style="width:100%;height:170px;object-fit:contain;border:.4pt solid #aaa;display:block">';
+    printHTML += '<div class="label" style="margin:6px 0 4px">Lateral CG</div>';
+    printHTML += '<img src="'+ latSrc +'" style="width:100%;height:140px;object-fit:contain;border:.4pt solid #aaa;display:block">';
+    printHTML += '</div>';
+    printHTML += '</div></div>'; // end p1-grid and page-wrap
+
+    // ── PAGE 2 ──
+    printHTML += '<div class="page-wrap">';
+    // Header p2
+    printHTML += '<div class="print-header">' +
+      '<img src="'+ kaekSrc +'" alt="KAEK">' +
+      '<h2>FLIGHT MANIFEST · BELL 505</h2>' +
+      '<div class="right-logo">' + (coSrc ? '<img src="'+coSrc+'" alt="">' : '') + '</div>' +
+      '</div>';
+
+    // Flight info table
+    var reg=g('fm-reg'), from=g('fm-from2'), to=g('fm-to2'), date=g('fm-date'), ige=g('fm-ige2'), oge=g('fm-oge2');
+    printHTML += '<table class="fm-meta" style="width:auto;margin-bottom:8px;font-size:8pt">' +
+      '<tr><td>Registration</td><td><b>'+reg+'</b></td><td style="padding-left:16px">Date</td><td><b>'+date+'</b></td>' +
+        '<td style="padding-left:16px">From</td><td><b>'+from+'</b></td>' +
+        '<td style="padding-left:16px">To</td><td><b>'+to+'</b></td>' +
+        '<td style="padding-left:16px">IGE</td><td><b>'+ige+'</b></td>' +
+        '<td style="padding-left:16px">OGE</td><td><b>'+oge+'</b></td></tr>' +
+      '</table>';
+
+    // Pax table
+    var fm_tbody = document.getElementById('fm-pax-tbody');
+    var fm_tbodyHTML = fm_tbody ? fm_tbody.innerHTML.replace(/class="pax-even"/g,'style="background:#f5f7fb"') : '';
+    printHTML += '<table class="pax-table">' +
+      '<thead><tr><th style="width:30px">#</th><th>PASSENGER NAME</th><th>SEAT</th><th style="width:80px">WEIGHT (lbs)</th><th style="width:70px">kg</th></tr></thead>' +
+      '<tbody>' + fm_tbodyHTML + '</tbody>' +
+      '<tfoot><tr class="pax-total"><td colspan="3" style="text-align:right;padding-right:10px">TOTAL PASSENGERS</td>' +
+        '<td style="text-align:center">'+ g('fm-total-lbs') +'</td><td style="text-align:center">'+ g('fm-total-kg') +'</td></tr></tfoot>' +
+      '</table>';
+
+    // Extra table
+    printHTML += '<table class="extra-table">' +
+      '<tr>' +
+        '<td class="extra-label">TAKEOFF FUEL</td><td>'+g('fm-fuel-lbs')+'</td><td>'+g('fm-fuel-kg')+'</td>' +
+        '<td class="extra-label">LANDING FUEL</td><td>'+g('fm-lfuel-lbs')+'</td><td>'+g('fm-lfuel-kg')+'</td>' +
+        '<td class="extra-label">CARGO</td><td>'+g('fm-cargo-lbs')+'</td><td>'+g('fm-cargo-kg')+'</td>' +
+      '</tr><tr>' +
+        '<td class="extra-label">TOW</td><td>'+g('fm-tow-lbs')+'</td><td>'+g('fm-tow-kg')+'</td>' +
+        '<td class="extra-label">LW</td><td>'+g('fm-lw-lbs')+'</td><td>'+g('fm-lw-kg')+'</td>' +
+        '<td class="extra-label">ZFW</td><td>'+g('fm-zfw-lbs')+'</td><td>'+g('fm-zfw-kg')+'</td>' +
+      '</tr></table>';
+
+    // Signature block
+    printHTML += '<div class="sig-grid">' +
+      '<div>' +
+        '<div class="label">Pilot in Command · IAW SSCA CCAR Part 8</div>' +
+        '<div style="font-weight:700;font-size:10pt;margin:4px 0">'+g('fm-pilot-name')+'</div>' +
+        '<div class="sig-box"><img src="'+ sigSrc +'" style="width:100%;height:100%;object-fit:contain"></div>' +
+        '<div class="label" style="margin-top:2px">Signature</div>' +
+      '</div>' +
+      '<div style="text-align:center">' +
+        '<div class="label">Date</div>' +
+        '<div style="font-size:12pt;font-weight:700;color:#00218a;margin:4px 0">'+g('fm-sig-date')+'</div>' +
+        '<div class="label" style="margin-top:10px">CG Status</div>' +
+        '<div style="font-weight:700;font-size:10pt">'+g('fm-cg-status2')+'</div>' +
+      '</div>' +
+    '</div>';
+
+    printHTML += '<div class="fm-footer">KAEK Aviation · Bell 505 Weight &amp; Balance System · '+g('fm-footer-date')+'</div>';
+    printHTML += '</div>'; // end page-wrap p2
+
+    printHTML += '</body></html>';
+
+    // Open print window
+    var pw = window.open('','_blank','width=900,height=700');
+    if(!pw){
+      // Popup blocked (Chrome iOS, some Safari) — try direct iframe approach
+      var iframe = document.getElementById('print-iframe');
+      if(!iframe){
+        iframe = document.createElement('iframe');
+        iframe.id = 'print-iframe';
+        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none';
+        document.body.appendChild(iframe);
+      }
+      iframe.onload = function(){
+        setTimeout(function(){
+          try{ iframe.contentWindow.focus(); iframe.contentWindow.print(); }
+          catch(e){ alert('No se pudo abrir la ventana de impresión.\n\nEn iPhone/iPad Chrome:\n1. Abre en Safari\n2. Menú Compartir ⬆️ → Imprimir'); }
+        }, 400);
+      };
+      iframe.srcdoc = printHTML;
+      return;
     }
-    // Force charts to render before print
-    setTimeout(function(){
-      if(charts.manifest) charts.manifest.update();
-      if(charts.lateral)  charts.lateral.update();
-      setTimeout(function(){ window.print(); }, 300);
-    }, 200);
 
-  } else {
-    // Desktop and Android — direct print with chart refresh
-    if(charts.manifest) charts.manifest.update();
-    if(charts.lateral)  charts.lateral.update();
-    setTimeout(function(){ window.print(); }, 150);
-  }
+    pw.document.write(printHTML);
+    pw.document.close();
+    pw.focus();
+    setTimeout(function(){
+      pw.print();
+      setTimeout(function(){ pw.close(); }, 1000);
+    }, 600);
+
+  }, 300);
 }
 
 function showPage(id,btn){
