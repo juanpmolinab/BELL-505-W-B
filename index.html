@@ -400,17 +400,16 @@ label{
   .fuel-bottom-row{grid-template-columns:1fr}
   .photo-505-panel{display:none}
 }
-/* ══ FLIGHT MANIFEST PAGE 2 (screen preview) ══ */
-.flight-manifest-page{
-  display:none; /* shown only on print */
+/* ══ FLIGHT MANIFEST PAGE 2 ══ */
+/* Hidden on screen by default */
+#flight-manifest-p2{
+  display:none;
   margin-top:20px;
   background:#fff;color:#000;
   font-family:Arial,sans-serif;font-size:10pt;
   border:1px solid var(--border);border-radius:var(--radius);
   padding:16px;
 }
-/* Screen preview toggle */
-.flight-manifest-page.preview-visible{display:block}
 
 .fm-header{display:grid;grid-template-columns:120px 1fr 130px;gap:12px;align-items:start;border-bottom:2px solid #003;padding-bottom:10px;margin-bottom:12px}
 .fm-logo-zone{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
@@ -497,13 +496,40 @@ label{
   *{ box-shadow:none!important }
 
   /* ── PAGE 2 — Flight manifest ── */
-  .flight-manifest-page{
+  #flight-manifest-p2{
     display:block!important;
+    visibility:visible!important;
     page-break-before:always;
     break-before:page;
-    margin:0;padding:0;
+    margin:0!important;
+    padding:8mm!important;
     border:none!important;
-    font-family:Arial,sans-serif;font-size:10pt;color:#000;background:#fff;
+    font-family:Arial,sans-serif!important;
+    font-size:10pt!important;
+    color:#000!important;
+    background:#fff!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+  }
+  #flight-manifest-p2 *{
+    color:#000!important;
+    background:transparent!important;
+  }
+  #flight-manifest-p2 .fm-pax-table th,
+  #flight-manifest-p2 .fm-section-label{
+    background:#00218a!important;
+    color:#fff!important;
+  }
+  #flight-manifest-p2 .fm-total-row td{
+    background:#e8edf7!important;
+  }
+  #flight-manifest-p2 .fm-pax-table tbody tr:nth-child(even) td{
+    background:#f5f7fb!important;
+  }
+  #flight-manifest-p2 .fm-sig-draw{
+    border:1pt solid #aaa!important;
+    background:#fff!important;
+    height:70px!important;
   }
 }
 </style>
@@ -729,7 +755,7 @@ label{
   <!-- ══════════════════════════════════════
        PAGE 2 — FLIGHT MANIFEST (Word style)
        ══════════════════════════════════════ -->
-  <div id="flight-manifest-p2" class="flight-manifest-page">
+  <div id="flight-manifest-p2">
     <!-- Header -->
     <div class="fm-header">
       <div class="fm-logo-zone">
