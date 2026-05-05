@@ -6,6 +6,8 @@
 <title>Bell 505 · Weight & Balance</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
 :root{
@@ -703,7 +705,7 @@ label{
     </div>
     <div style="display:flex;gap:8px">
       <button onclick="clearSignature()">Clear Signature</button>
-      <button class="success" onclick="smartPrint()">🖨 Print / PDF</button>
+      <button class="success" onclick="smartPrint()">⬇ Download PDF</button>
     </div>
   </div>
 
@@ -1424,225 +1426,174 @@ function updateFlightManifestP2(){
   },100);
 }
 
-// ── SMART PRINT: popup window approach — works on ALL platforms ──
+
+// ── PDF GENERATOR ──
 function smartPrint(){
   updateFlightManifestP2();
+  var btn=document.querySelector('button.success');
+  if(btn){btn.textContent='...';btn.disabled=true;}
+  var jsPDF=window.jspdf.jsPDF;
+  var PW=297,PH=210,M=10;
+  var pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  function canvasImg(id){try{var c=document.getElementById(id);return c?c.toDataURL('image/png'):'';}catch(e){return '';}}
+  var sigSrc=canvasImg('canvasSign'),chartSrc=canvasImg('manifestChart'),latSrc=canvasImg('lateralChart');
+  var kaekEl=document.getElementById('m-logo-kaek');var kaekSrc=kaekEl?kaekEl.src:'';
+  var coEl=document.getElementById('m-logo-company');var coSrc=(coEl&&coEl.style.display!=='none')?coEl.src:'';
+  function g(id){var el=document.getElementById(id);return el?(el.textContent||el.value||'').trim():'';}
+  function sf(sty,sz,col){pdf.setFont('helvetica',sty||'normal');pdf.setFontSize(sz||7);col?pdf.setTextColor(col[0],col[1],col[2]):pdf.setTextColor(0,0,0);}
+  function fr(x,y,w,h,fill){pdf.setFillColor(fill[0],fill[1],fill[2]);pdf.setDrawColor(180,180,180);pdf.setLineWidth(0.1);pdf.rect(x,y,w,h,'FD');}
+  function br(x,y,w,h){pdf.setDrawColor(180,180,180);pdf.setLineWidth(0.1);pdf.rect(x,y,w,h,'D');}
+  function cl(txt,x,y,w,h,o){
+    o=o||{};var sz=o.sz||6.5;
+    o.bg?fr(x,y,w,h,o.bg):br(x,y,w,h);
+    sf(o.bold?'bold':'normal',sz,o.color||[0,0,0]);
+    var al=o.align||'left',tx=al==='center'?x+w/2:al==='right'?x+w-1:x+1;
+    var mc=Math.max(3,Math.floor(w/(sz*0.45)));
+    var t=String(txt||'');if(t.length>mc)t=t.slice(0,mc-1)+'~';
+    pdf.text(t,tx,y+h*0.68,{align:al});
+  }
+  var cgRaw=g('cg-status').replace(/[^\x00-\x7F]/g,'').trim()||'IN LIMITS';
+  var sc=cgRaw.indexOf('OVER')>=0?[200,0,0]:cgRaw.indexOf('CHECK')>=0?[200,100,0]:[0,150,60];
 
-  // Give charts and DOM time to update
-  setTimeout(function(){
-    // Capture signature canvas as image
-    var sigSrc = '';
-    var sigCanvas = document.getElementById('canvasSign');
-    if(sigCanvas) try{ sigSrc = sigCanvas.toDataURL('image/png'); }catch(e){}
+  // PAGE 1
+  var y=M;
+  if(kaekSrc)try{pdf.addImage(kaekSrc,'PNG',M,y,14,10);}catch(e){}
+  sf('bold',12,[0,33,138]);pdf.text('WEIGHT & BALANCE MANIFEST  -  BELL 505',PW/2,y+7,{align:'center'});
+  if(coSrc)try{pdf.addImage(coSrc,'PNG',PW-M-14,y,14,10);}catch(e){}
+  pdf.setDrawColor(0,33,138);pdf.setLineWidth(0.4);pdf.line(M,y+11,PW-M,y+11);
+  y+=14;
 
-    // Capture manifest chart as image
-    var chartSrc = '';
-    var mChart = document.getElementById('manifestChart');
-    if(mChart) try{ chartSrc = mChart.toDataURL('image/png'); }catch(e){}
+  var LW=155,RW=PW-M*2-LW-3,LX=M,RX=M+LW+3;
+  var startY=y;
 
-    var latSrc = '';
-    var lChart = document.getElementById('lateralChart');
-    if(lChart) try{ latSrc = lChart.toDataURL('image/png'); }catch(e){}
+  // Info box
+  var id2=[['Reg',g('m-reg')],['Date',(document.getElementById('m-date')||{}).value||''],
+           ['From',g('m-from')],['To',g('m-to')],
+           ['IGE',g('m-ige')],['OGE',g('m-oge')],
+           ['Dep',(document.getElementById('m-dep')||{}).value||''],
+           ['Arr',(document.getElementById('m-arr')||{}).value||'']];
+  var iCW=LW/4,iH=4.5;
+  for(var i=0;i<8;i++){
+    var ix=LX+(i%4)*iCW,iy=y+(i<4?0:iH);
+    fr(ix,iy,iCW,iH,[238,242,252]);
+    sf('bold',5,[50,50,130]);pdf.text(id2[i][0],ix+0.8,iy+2);
+    sf('normal',6.5,[0,0,0]);var v=String(id2[i][1]||'-');if(v.length>9)v=v.slice(0,8)+'~';
+    pdf.text(v,ix+0.8,iy+4.1);
+  }
+  y+=iH*2+2;
 
-    // Gather page 2 data
-    var g = function(id){ var el=document.getElementById(id); return el?el.textContent||el.value||'—':'—'; };
-    var p2 = document.getElementById('flight-manifest-p2');
-    var p2html = p2 ? p2.innerHTML : '';
+  // Moments table
+  var rH=4.2;
+  var tc=[{l:'Item',w:LW*0.30},{l:'lbs',w:LW*0.12},{l:'Long Arm',w:LW*0.13},
+          {l:'Moment',w:LW*0.15},{l:'Lat Arm',w:LW*0.13},{l:'Lat Mom',w:LW*0.17}];
+  var hx=LX;
+  tc.forEach(function(c){cl(c.l,hx,y,c.w,rH,{bg:[40,60,140],color:[255,255,255],bold:true,align:'center',sz:5.5});hx+=c.w;});
+  y+=rH;
+  var tb=document.getElementById('manifest-tbody');
+  if(tb){tb.querySelectorAll('tr').forEach(function(row,ri){
+    var cells=row.querySelectorAll('td');if(!cells.length)return;
+    var isTot=row.classList.contains('total-row');
+    var bg=isTot?[220,230,248]:(ri%2?[248,249,253]:[255,255,255]);
+    var tc2=row.classList.contains('orange-row')?[160,48,0]:row.classList.contains('green-row')?[0,80,30]:row.classList.contains('blue-row')?[0,40,140]:[0,0,0];
+    var rx=LX;
+    tc.forEach(function(c,ci){
+      var t=(cells[ci]?cells[ci].textContent:'').trim();
+      cl(t,rx,y,c.w,rH,{bg:bg,color:tc2,bold:isTot,align:ci===0?'left':'right',sz:5.5});
+      rx+=c.w;
+    });
+    y+=rH;
+  });}
+  y+=2;
+  sf('bold',6,[80,80,80]);pdf.text('PILOT SIGNATURE:  '+g('sig-name'),LX,y+3);y+=5;
+  br(LX,y,LW,14);if(sigSrc)try{pdf.addImage(sigSrc,'PNG',LX+2,y+1,LW-4,12);}catch(e){}
+  y+=16;
 
-    // Build page 1 content
-    var mGrid = document.querySelector('.manifest-grid');
-    var p1Left  = document.querySelector('.manifest-grid>div:first-child');
-    var p1Right = document.querySelector('.manifest-grid>div:last-child');
-    var p1LeftHTML  = p1Left  ? p1Left.innerHTML  : '';
-    var p1RightHTML = p1Right ? p1Right.innerHTML : '';
+  // Right col charts
+  var ry=startY;
+  var avH=PH-M-startY-2;
+  var ch1=Math.round(avH*0.50),ch2=Math.round(avH*0.35),resH=Math.round(avH*0.10);
+  sf('bold',5.5,[80,80,80]);pdf.text('Longitudinal CG',RX,ry+3);ry+=4;
+  br(RX,ry,RW,ch1);if(chartSrc)try{pdf.addImage(chartSrc,'PNG',RX+1,ry+1,RW-2,ch1-2);}catch(e){}ry+=ch1+2;
+  pdf.text('Lateral CG',RX,ry+3);ry+=4;
+  br(RX,ry,RW,ch2);if(latSrc)try{pdf.addImage(latSrc,'PNG',RX+1,ry+1,RW-2,ch2-2);}catch(e){}ry+=ch2+2;
+  var rLabels=['TAKEOFF','LANDING','ZERO FUEL'];
+  var rVals=[g('r-tow'),g('r-lw'),g('r-zfw')];
+  var rColors=[[180,60,0],[0,130,70],[0,80,180]];
+  var rCW=RW/3;
+  rLabels.forEach(function(lb,i){
+    fr(RX+i*rCW,ry,rCW,9,[245,247,252]);
+    sf('bold',5,rColors[i]);pdf.text(lb,RX+i*rCW+rCW/2,ry+3,{align:'center'});
+    sf('bold',9,rColors[i]);pdf.text(rVals[i],RX+i*rCW+rCW/2,ry+7.5,{align:'center'});
+  });ry+=11;
+  sf('bold',7,sc);pdf.text(cgRaw,RX+RW/2,ry+4,{align:'center'});
 
-    // Get logo src
-    var kaekLogo = document.getElementById('m-logo-kaek');
-    var kaekSrc  = kaekLogo ? kaekLogo.src : '';
-    var coLogo   = document.getElementById('m-logo-company');
-    var coSrc    = (coLogo && coLogo.style.display!=='none') ? coLogo.src : '';
+  // PAGE 2
+  pdf.addPage('a4','landscape');y=M;
+  if(kaekSrc)try{pdf.addImage(kaekSrc,'PNG',M,y,14,10);}catch(e){}
+  sf('bold',12,[0,33,138]);pdf.text('FLIGHT MANIFEST  -  BELL 505',PW/2,y+7,{align:'center'});
+  if(coSrc)try{pdf.addImage(coSrc,'PNG',PW-M-14,y,14,10);}catch(e){}
+  pdf.setDrawColor(0,33,138);pdf.setLineWidth(0.4);pdf.line(M,y+11,PW-M,y+11);y+=14;
 
-    var printHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<title>Bell 505 · Manifest</title>' +
-    '<style>' +
-    'body{margin:0;padding:0;font-family:Arial,sans-serif;font-size:9pt;color:#000;background:#fff}' +
-    '@page{size:A4 landscape;margin:8mm}' +
-    '.page-wrap{width:100%;box-sizing:border-box;padding:4mm}' +
-    '.page-break{page-break-after:always;break-after:page}' +
-    '.print-btn{position:fixed;top:10px;right:10px;z-index:9999;background:#00218a;color:#fff;' +
-      'border:none;border-radius:6px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer}' +
-    '@media print{.print-btn{display:none}}' +
+  var iS=[['Reg',g('fm-reg')],['Date',g('fm-date')],['From',g('fm-from2')],['To',g('fm-to2')],['IGE',g('fm-ige2')],['OGE',g('fm-oge2')]];
+  var sCW2=(PW-M*2)/6,sH2=7;
+  iS.forEach(function(it,i){
+    fr(M+i*sCW2,y,sCW2,sH2,[232,238,252]);
+    sf('bold',5.5,[0,33,138]);pdf.text(it[0],M+i*sCW2+1,y+2.5);
+    sf('bold',7,[0,0,0]);var v2=String(it[1]||'-');if(v2.length>Math.floor(sCW2/2.2))v2=v2.slice(0,Math.floor(sCW2/2.2)-1)+'~';
+    pdf.text(v2,M+i*sCW2+1,y+6);
+  });y+=sH2+2;
 
-    /* Header shared */
-    '.print-header{display:flex;justify-content:space-between;align-items:center;' +
-      'border-bottom:2pt solid #00218a;padding-bottom:5px;margin-bottom:8px}' +
-    '.print-header img{height:38px;width:auto;object-fit:contain}' +
-    '.print-header h2{font-size:12pt;font-weight:700;color:#00218a;margin:0;font-family:Arial;letter-spacing:.05em}' +
-    '.print-header .right-logo{min-width:60px;text-align:right}' +
+  var pC=[{l:'#',w:(PW-M*2)*0.04},{l:'PASSENGER NAME',w:(PW-M*2)*0.30},{l:'SEAT',w:(PW-M*2)*0.18},
+          {l:'WEIGHT (lbs)',w:(PW-M*2)*0.16},{l:'kg',w:(PW-M*2)*0.14}];
+  var pH2=5.5;var hx2=M;
+  pC.forEach(function(c){cl(c.l,hx2,y,c.w,pH2,{bg:[0,33,138],color:[255,255,255],bold:true,align:'center',sz:6});hx2+=c.w;});y+=pH2;
+  var fmTb=document.getElementById('fm-pax-tbody');
+  if(fmTb){fmTb.querySelectorAll('tr').forEach(function(row,ri){
+    var cells=row.querySelectorAll('td');if(!cells.length)return;
+    var bg=ri%2?[245,247,251]:[255,255,255];var px4=M;
+    pC.forEach(function(c,ci){
+      var t=(cells[ci]?cells[ci].textContent:'').trim();
+      cl(t,px4,y,c.w,pH2,{bg:bg,align:ci<=1?'left':'center',sz:6});px4+=c.w;
+    });y+=pH2;
+  });}
+  // Total
+  var px5=M;pC.forEach(function(c,ci){
+    var t=ci===1?'TOTAL PASSENGERS':ci===3?g('fm-total-lbs'):ci===4?g('fm-total-kg'):'';
+    cl(t,px5,y,c.w,pH2,{bg:[215,225,248],bold:true,align:ci<=1?'right':'center',sz:6});px5+=c.w;
+  });y+=pH2+3;
 
-    /* P1 grid */
-    '.p1-grid{display:grid;grid-template-columns:56% 42%;gap:2%;width:100%}' +
-    'table{width:100%;border-collapse:collapse;font-size:7pt}' +
-    'th,td{border:.4pt solid #aaa;padding:2px 4px}' +
-    'th{background:#ddd;text-align:center}' +
-    '.or td{color:#a03000}.gr td{color:#004020}.bl td{color:#002070}' +
-    '.tr-bold{font-weight:700;border-top:1.5pt solid #00218a}' +
-    '.sign-box{border:.4pt solid #aaa;height:55px;width:100%;display:block}' +
-    '.label{font-size:8pt;color:#555;text-transform:uppercase;letter-spacing:.06em}' +
-    'input-disp{display:inline-block;border:.4pt solid #ccc;padding:1px 4px;font-size:7pt;background:#fff}' +
+  var eData=[[['TAKEOFF FUEL','fm-fuel-lbs','fm-fuel-kg'],['LANDING FUEL','fm-lfuel-lbs','fm-lfuel-kg'],['CARGO','fm-cargo-lbs','fm-cargo-kg']],
+             [['TOW','fm-tow-lbs','fm-tow-kg'],['LW','fm-lw-lbs','fm-lw-kg'],['ZFW','fm-zfw-lbs','fm-zfw-kg']]];
+  var eGW=(PW-M*2)/3,eLW2=eGW*0.38,eVW=eGW*0.31,eRH=5.5;
+  eData.forEach(function(row){
+    row.forEach(function(col,i){
+      var ex2=M+i*eGW;
+      cl(col[0],ex2,y,eLW2,eRH,{bg:[0,33,138],color:[255,255,255],bold:true,align:'center',sz:5.5});
+      cl(g(col[1]),ex2+eLW2,y,eVW,eRH,{bg:[255,255,255],bold:true,align:'center',sz:6.5});
+      cl(g(col[2]),ex2+eLW2+eVW,y,eVW,eRH,{bg:[248,248,248],align:'center',sz:6.5});
+    });y+=eRH;
+  });y+=4;
 
-    /* P2 styles */
-    '.fm-header{display:grid;grid-template-columns:110px 1fr 120px;gap:10px;' +
-      'border-bottom:2pt solid #00218a;padding-bottom:8px;margin-bottom:10px}' +
-    '.fm-title{font-size:14pt;font-weight:700;color:#00218a}' +
-    '.fm-sub{font-size:10pt;font-weight:600;color:#333;margin-top:2px}' +
-    '.fm-route{font-size:9pt;color:#555;margin-top:2px}' +
-    '.fm-meta td{padding:1px 4px;font-size:8pt}.fm-meta td:first-child{font-weight:700;color:#00218a}' +
-    '.pax-table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9pt}' +
-    '.pax-table th{background:#00218a;color:#fff;padding:4px 6px;text-align:left;font-size:8pt;text-transform:uppercase}' +
-    '.pax-table td{border:.4pt solid #bbb;padding:4px 6px}' +
-    '.pax-table td:nth-child(4),.pax-table td:nth-child(5){text-align:center;font-weight:600}' +
-    '.pax-even{background:#f5f7fb}' +
-    '.pax-total td{background:#e8edf7;border-top:1.5pt solid #00218a;font-weight:700}' +
-    '.extra-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:8.5pt}' +
-    '.extra-table td{border:.4pt solid #bbb;padding:3px 6px;text-align:center}' +
-    '.extra-label{background:#00218a;color:#fff;font-weight:700;font-size:7.5pt;text-transform:uppercase}' +
-    '.sig-grid{display:grid;grid-template-columns:1fr 130px;gap:14px;border-top:1pt solid #ccc;padding-top:8px}' +
-    '.sig-box{border:1pt solid #aaa;height:65px;background:#fff;overflow:hidden}' +
-    '.fm-footer{border-top:.5pt solid #ccc;padding-top:5px;font-size:7pt;color:#888;text-align:center;margin-top:8px}' +
-    '-webkit-print-color-adjust:exact;print-color-adjust:exact' +
-    '</style></head><body>';
+  var sW=(PW-M*2)*0.67,stW=(PW-M*2)*0.31,sBH=22;
+  br(M,y,sW,sBH);
+  sf('bold',5.5,[80,80,80]);pdf.text('PILOT IN COMMAND - IAW SSCA CCAR PART 8',M+2,y+3.5);
+  sf('bold',8,[0,0,0]);pdf.text(g('fm-pilot-name'),M+2,y+7.5);
+  if(sigSrc)try{pdf.addImage(sigSrc,'PNG',M+2,y+8,sW-4,13);}catch(e){}
+  sf('normal',5.5,[140,140,140]);pdf.text('Signature',M+2,y+sBH+1);
+  fr(M+sW+3,y,stW,sBH,[247,248,252]);
+  sf('bold',5.5,[80,80,80]);pdf.text('DATE',M+sW+5,y+4);
+  sf('bold',11,[0,33,138]);pdf.text(g('fm-sig-date'),M+sW+5,y+9.5);
+  sf('bold',5.5,[80,80,80]);pdf.text('CG STATUS',M+sW+5,y+14);
+  sf('bold',9,sc);pdf.text(cgRaw,M+sW+5,y+20);
+  y+=sBH+4;
+  pdf.setDrawColor(180,180,180);pdf.setLineWidth(0.2);pdf.line(M,y,PW-M,y);
+  sf('normal',5.5,[140,140,140]);
+  pdf.text('KAEK Aviation  -  Bell 505 Weight & Balance  -  '+g('fm-footer-date'),PW/2,y+3.5,{align:'center'});
 
-    // ── PAGE 1 ──
-    printHTML += '<button id="pbtn" class="print-btn">🖨 Imprimir</button>';
-    printHTML += '<div class="page-wrap page-break">';
-
-    // Header p1
-    printHTML += '<div class="print-header">' +
-      '<img src="'+ kaekSrc +'" alt="KAEK">' +
-      '<h2>WEIGHT &amp; BALANCE MANIFEST · BELL 505</h2>' +
-      '<div class="right-logo">' + (coSrc ? '<img src="'+coSrc+'" alt="">' : '') + '</div>' +
-      '</div>';
-
-    // Rebuild manifest table from live DOM data
-    var tbody = document.getElementById('manifest-tbody');
-    var tbodyHTML = tbody ? tbody.innerHTML : '';
-    // Flight info box
-    var infoBox = document.querySelector('#page-manifest .manifest-grid > div:first-child > div:first-child');
-    var infoHTML = infoBox ? infoBox.outerHTML : '';
-
-    printHTML += '<div class="p1-grid">';
-    // Left col
-    printHTML += '<div>';
-    printHTML += infoHTML;
-    printHTML += '<table><thead><tr><th>Item</th><th>Mass (lbs)</th><th>Long Arm</th><th>Long Moment</th><th>Lat Arm</th><th>Lat Moment</th></tr></thead><tbody>' + tbodyHTML + '</tbody></table>';
-    // Signature
-    printHTML += '<div style="margin-top:8px"><div class="label">Pilot Signature: '+ g('sig-name') +'</div>';
-    printHTML += '<div class="sign-box"><img src="'+ sigSrc +'" style="width:100%;height:100%;object-fit:contain"></div></div>';
-    printHTML += '</div>';
-    // Right col
-    printHTML += '<div>';
-    printHTML += '<div class="label" style="margin-bottom:4px">Longitudinal CG</div>';
-    printHTML += '<img src="'+ chartSrc +'" style="width:100%;height:170px;object-fit:contain;border:.4pt solid #aaa;display:block">';
-    printHTML += '<div class="label" style="margin:6px 0 4px">Lateral CG</div>';
-    printHTML += '<img src="'+ latSrc +'" style="width:100%;height:140px;object-fit:contain;border:.4pt solid #aaa;display:block">';
-    printHTML += '</div>';
-    printHTML += '</div></div>'; // end p1-grid and page-wrap
-
-    // ── PAGE 2 ──
-    printHTML += '<div class="page-wrap">';
-    // Header p2
-    printHTML += '<div class="print-header">' +
-      '<img src="'+ kaekSrc +'" alt="KAEK">' +
-      '<h2>FLIGHT MANIFEST · BELL 505</h2>' +
-      '<div class="right-logo">' + (coSrc ? '<img src="'+coSrc+'" alt="">' : '') + '</div>' +
-      '</div>';
-
-    // Flight info table
-    var reg=g('fm-reg'), from=g('fm-from2'), to=g('fm-to2'), date=g('fm-date'), ige=g('fm-ige2'), oge=g('fm-oge2');
-    printHTML += '<table class="fm-meta" style="width:auto;margin-bottom:8px;font-size:8pt">' +
-      '<tr><td>Registration</td><td><b>'+reg+'</b></td><td style="padding-left:16px">Date</td><td><b>'+date+'</b></td>' +
-        '<td style="padding-left:16px">From</td><td><b>'+from+'</b></td>' +
-        '<td style="padding-left:16px">To</td><td><b>'+to+'</b></td>' +
-        '<td style="padding-left:16px">IGE</td><td><b>'+ige+'</b></td>' +
-        '<td style="padding-left:16px">OGE</td><td><b>'+oge+'</b></td></tr>' +
-      '</table>';
-
-    // Pax table
-    var fm_tbody = document.getElementById('fm-pax-tbody');
-    var fm_tbodyHTML = fm_tbody ? fm_tbody.innerHTML.replace(/class="pax-even"/g,'style="background:#f5f7fb"') : '';
-    printHTML += '<table class="pax-table">' +
-      '<thead><tr><th style="width:30px">#</th><th>PASSENGER NAME</th><th>SEAT</th><th style="width:80px">WEIGHT (lbs)</th><th style="width:70px">kg</th></tr></thead>' +
-      '<tbody>' + fm_tbodyHTML + '</tbody>' +
-      '<tfoot><tr class="pax-total"><td colspan="3" style="text-align:right;padding-right:10px">TOTAL PASSENGERS</td>' +
-        '<td style="text-align:center">'+ g('fm-total-lbs') +'</td><td style="text-align:center">'+ g('fm-total-kg') +'</td></tr></tfoot>' +
-      '</table>';
-
-    // Extra table
-    printHTML += '<table class="extra-table">' +
-      '<tr>' +
-        '<td class="extra-label">TAKEOFF FUEL</td><td>'+g('fm-fuel-lbs')+'</td><td>'+g('fm-fuel-kg')+'</td>' +
-        '<td class="extra-label">LANDING FUEL</td><td>'+g('fm-lfuel-lbs')+'</td><td>'+g('fm-lfuel-kg')+'</td>' +
-        '<td class="extra-label">CARGO</td><td>'+g('fm-cargo-lbs')+'</td><td>'+g('fm-cargo-kg')+'</td>' +
-      '</tr><tr>' +
-        '<td class="extra-label">TOW</td><td>'+g('fm-tow-lbs')+'</td><td>'+g('fm-tow-kg')+'</td>' +
-        '<td class="extra-label">LW</td><td>'+g('fm-lw-lbs')+'</td><td>'+g('fm-lw-kg')+'</td>' +
-        '<td class="extra-label">ZFW</td><td>'+g('fm-zfw-lbs')+'</td><td>'+g('fm-zfw-kg')+'</td>' +
-      '</tr></table>';
-
-    // Signature block
-    printHTML += '<div class="sig-grid">' +
-      '<div>' +
-        '<div class="label">Pilot in Command · IAW SSCA CCAR Part 8</div>' +
-        '<div style="font-weight:700;font-size:10pt;margin:4px 0">'+g('fm-pilot-name')+'</div>' +
-        '<div class="sig-box"><img src="'+ sigSrc +'" style="width:100%;height:100%;object-fit:contain"></div>' +
-        '<div class="label" style="margin-top:2px">Signature</div>' +
-      '</div>' +
-      '<div style="text-align:center">' +
-        '<div class="label">Date</div>' +
-        '<div style="font-size:12pt;font-weight:700;color:#00218a;margin:4px 0">'+g('fm-sig-date')+'</div>' +
-        '<div class="label" style="margin-top:10px">CG Status</div>' +
-        '<div style="font-weight:700;font-size:10pt">'+g('fm-cg-status2')+'</div>' +
-      '</div>' +
-    '</div>';
-
-    printHTML += '<div class="fm-footer">KAEK Aviation · Bell 505 Weight &amp; Balance System · '+g('fm-footer-date')+'</div>';
-    printHTML += '</div>'; // end page-wrap p2
-
-    printHTML += '</body>' +
-    '<script>window.onload=function(){' +
-      'var btn=document.getElementById("pbtn");' +
-      'btn.onclick=function(){window.print()};' +
-      // Auto-print on desktop/Android, manual on iOS Chrome
-      'var isChromeiOS=/CriOS/.test(navigator.userAgent);' +
-      'if(!isChromeiOS){setTimeout(function(){window.print();},600)}' +
-    '}<\/script></html>';
-
-    // Open print window
-    var pw = window.open('','_blank','width=900,height=700');
-    if(!pw){
-      // Popup blocked (Chrome iOS) — use Blob URL trick
-      try {
-        var blob = new Blob([printHTML], {type:'text/html'});
-        var url  = URL.createObjectURL(blob);
-        // Open blob URL in same tab — user taps back after printing
-        window.location.href = url;
-      } catch(e){
-        alert('No se pudo abrir la ventana de impresión.\n\nEn Chrome iOS:\n1. Abre este link en Safari\n2. Menú Compartir ⬆️ → Imprimir');
-      }
-      return;
-    }
-
-    pw.document.write(printHTML);
-    pw.document.close();
-    pw.focus();
-    setTimeout(function(){
-      pw.print();
-      setTimeout(function(){ pw.close(); }, 1000);
-    }, 600);
-
-  }, 300);
+  var reg2=g('fm-reg').replace(/[^a-zA-Z0-9-]/g,'')||'B505';
+  var date2=(document.getElementById('m-date')||{}).value||new Date().toISOString().slice(0,10);
+  pdf.save('WB_Manifest_'+reg2+'_'+date2+'.pdf');
+  if(btn){btn.textContent='Download PDF';btn.disabled=false;}
 }
 
 function showPage(id,btn){
