@@ -705,7 +705,7 @@ label{
     </div>
     <div style="display:flex;gap:8px">
       <button onclick="clearSignature()">Clear Signature</button>
-      <button class="success" onclick="smartPrint()">⬇ Download PDF</button>
+      <button class="success" onclick="smartPrint()">🖨 Print / PDF</button>
     </div>
   </div>
 
@@ -1431,7 +1431,7 @@ function updateFlightManifestP2(){
 function smartPrint(){
   updateFlightManifestP2();
   var btn=document.querySelector('button.success');
-  if(btn){btn.textContent='...';btn.disabled=true;}
+  if(btn){btn.textContent='⏳ Generating...';btn.disabled=true;}
   var jsPDF=window.jspdf.jsPDF;
   var PW=297,PH=210,M=10;
   var pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
@@ -1592,8 +1592,13 @@ function smartPrint(){
 
   var reg2=g('fm-reg').replace(/[^a-zA-Z0-9-]/g,'')||'B505';
   var date2=(document.getElementById('m-date')||{}).value||new Date().toISOString().slice(0,10);
-  pdf.save('WB_Manifest_'+reg2+'_'+date2+'.pdf');
-  if(btn){btn.textContent='Download PDF';btn.disabled=false;}
+  // Open in new tab so user can print from browser PDF viewer
+  var pdfBlob = pdf.output('blob');
+  var blobUrl = URL.createObjectURL(pdfBlob);
+  var win = window.open(blobUrl, '_blank');
+  // Fallback: if popup blocked, download instead
+  if(!win){ pdf.save('WB_Manifest_'+reg2+'_'+date2+'.pdf'); }
+  if(btn){btn.textContent='🖨 Print / PDF';btn.disabled=false;}
 }
 
 function showPage(id,btn){
