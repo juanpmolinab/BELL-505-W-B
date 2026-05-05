@@ -442,35 +442,38 @@ label{
 .fm-footer{border-top:1pt solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center}
 
 @media print{
-  @page{ size:A4 landscape; margin:8mm 8mm 8mm 8mm }
-  html,body{ margin:0;padding:0;background:#fff!important }
+  @page{ size:A4 landscape; margin:8mm }
+  html,body{ margin:0!important;padding:0!important;background:#fff!important;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact; }
+
   /* Hide everything except manifest page */
   .top-bar,.nav-btn,button,.page:not(#page-manifest){ display:none!important }
-  #page-manifest{ display:block!important;padding:0;margin:0 }
-  /* Hide screen toolbar */
-  #page-manifest>div:first-child{ display:none!important }
-  /* Hide passenger manifest div (info goes on page 2) */
-  #pax-manifest, #pax-manifest+*, [style*="PASSENGER MANIFEST"]{ display:none!important }
+  #page-manifest{ display:block!important;padding:0!important;margin:0!important;
+    overflow:visible!important;height:auto!important; }
 
-  /* ── PAGE 1 HEADER: logos + title ── */
+  /* Hide screen toolbar (first child = toolbar div) */
+  #page-manifest>div:first-child{ display:none!important }
+
+  /* ── PAGE 1 HEADER ── */
   .print-page1-header{
     display:flex!important;
-    justify-content:space-between;
-    align-items:center;
-    border-bottom:2pt solid #00218a;
-    padding-bottom:5px;
-    margin-bottom:8px;
+    justify-content:space-between!important;
+    align-items:center!important;
+    border-bottom:2pt solid #00218a!important;
+    padding-bottom:5px!important;
+    margin-bottom:8px!important;
   }
-  .print-page1-header img{ height:40px;width:auto;object-fit:contain }
-  .print-page1-header h2{ font-size:13pt;font-weight:700;color:#00218a;letter-spacing:.06em;font-family:Arial }
+  .print-page1-header img{ height:40px!important;width:auto!important;object-fit:contain!important }
+  .print-page1-header h2{ font-size:13pt!important;font-weight:700!important;color:#00218a!important;font-family:Arial!important }
 
-  /* ── PAGE 1 grid ── */
+  /* ── PAGE 1 W&B grid ── */
   .manifest-grid{
     display:grid!important;
     grid-template-columns:56% 42%!important;
     gap:2%!important;
-    page-break-after:always;
-    break-after:page;
+    page-break-after:always!important;
+    break-after:page!important;
+    -webkit-column-break-after:always!important;
   }
 
   /* Tables */
@@ -481,15 +484,15 @@ label{
   .manifest-table tr.green-row td{ color:#004020!important }
   .manifest-table tr.blue-row td{ color:#002070!important }
 
-  /* Charts — full height, no clipping */
+  /* Charts */
   .chart-panel{ border:0.4pt solid #aaa!important;background:#fff!important;padding:4px!important;margin-bottom:4px!important;overflow:visible!important }
-  .chart-wrap{ height:180px!important;overflow:visible!important }
-  canvas{ max-width:100%!important;max-height:100%!important }
+  .chart-wrap{ height:180px!important;overflow:visible!important;position:relative!important }
+  canvas{ display:block!important;max-width:100%!important;height:auto!important }
 
   /* Signature */
   .sign-area{ border:0.4pt solid #aaa!important;height:60px!important }
 
-  /* Info boxes */
+  /* Generic cleanup */
   div[style*="background:var(--surface)"]{ background:#fff!important;border:0.4pt solid #ccc!important }
   input,select{ background:#fff!important;border:0.4pt solid #ccc!important;color:#000!important;font-size:7pt!important }
   label{ color:#555!important }
@@ -499,8 +502,10 @@ label{
   #flight-manifest-p2{
     display:block!important;
     visibility:visible!important;
-    page-break-before:always;
-    break-before:page;
+    opacity:1!important;
+    page-break-before:always!important;
+    break-before:page!important;
+    -webkit-column-break-before:always!important;
     margin:0!important;
     padding:8mm!important;
     border:none!important;
@@ -510,27 +515,17 @@ label{
     background:#fff!important;
     width:100%!important;
     box-sizing:border-box!important;
+    overflow:visible!important;
   }
-  #flight-manifest-p2 *{
-    color:#000!important;
-    background:transparent!important;
-  }
+  #flight-manifest-p2 *{ color:#000!important;background:transparent!important }
   #flight-manifest-p2 .fm-pax-table th,
   #flight-manifest-p2 .fm-section-label{
-    background:#00218a!important;
-    color:#fff!important;
+    background:#00218a!important;color:#fff!important;
+    -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
   }
-  #flight-manifest-p2 .fm-total-row td{
-    background:#e8edf7!important;
-  }
-  #flight-manifest-p2 .fm-pax-table tbody tr:nth-child(even) td{
-    background:#f5f7fb!important;
-  }
-  #flight-manifest-p2 .fm-sig-draw{
-    border:1pt solid #aaa!important;
-    background:#fff!important;
-    height:70px!important;
-  }
+  #flight-manifest-p2 .fm-total-row td{ background:#e8edf7!important }
+  #flight-manifest-p2 .fm-pax-table tbody tr:nth-child(even) td{ background:#f5f7fb!important }
+  #flight-manifest-p2 .fm-sig-draw{ border:1pt solid #aaa!important;background:#fff!important;height:70px!important }
 }
 </style>
 </head>
@@ -708,7 +703,7 @@ label{
     </div>
     <div style="display:flex;gap:8px">
       <button onclick="clearSignature()">Clear Signature</button>
-      <button class="success" onclick="window.print()">Print / PDF</button>
+      <button class="success" onclick="smartPrint()">🖨 Print / PDF</button>
     </div>
   </div>
 
@@ -1427,6 +1422,43 @@ function updateFlightManifestP2(){
       try{ctx.drawImage(src,0,0,dst.width,dst.height);}catch(e){}
     }
   },100);
+}
+
+// ── SMART PRINT: works on iOS Safari, Chrome mobile, desktop ──
+function smartPrint(){
+  // Make sure page 2 data is up to date
+  updateFlightManifestP2();
+
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  var isAndroid = /android/i.test(navigator.userAgent);
+
+  // iOS Safari: window.print() works but needs a small delay
+  // iOS Chrome: blocked — must use workaround
+  // Android Chrome: window.print() usually works
+  // Desktop: window.print() works fine
+
+  if(isIOS){
+    // iOS: setTimeout trick needed for Safari, Chrome on iOS is blocked
+    // Show instructions for Chrome iOS
+    var isChromeiOS = /CriOS/.test(navigator.userAgent);
+    if(isChromeiOS){
+      // Chrome on iOS blocks window.print() — open in Safari instead
+      alert('Para imprimir en iPhone/iPad:\n\n1. Abre este link en Safari\n2. Usa el botón Compartir (⬆️)\n3. Selecciona "Imprimir"\n\nO presiona OK para intentar igualmente.');
+    }
+    // Force charts to render before print
+    setTimeout(function(){
+      if(charts.manifest) charts.manifest.update();
+      if(charts.lateral)  charts.lateral.update();
+      setTimeout(function(){ window.print(); }, 300);
+    }, 200);
+
+  } else {
+    // Desktop and Android — direct print with chart refresh
+    if(charts.manifest) charts.manifest.update();
+    if(charts.lateral)  charts.lateral.update();
+    setTimeout(function(){ window.print(); }, 150);
+  }
 }
 
 function showPage(id,btn){
